@@ -1,0 +1,977 @@
+token<str_val> AdditiveExpression
+token<str_val> AndExpression
+token<str_val> ArgumentList
+token<str_val> ArrayAccess
+token<str_val> ArrayCreationExpression
+token<str_val> ArrayInitializer
+token<str_val> ArrayType
+token<str_val> AssertStatement
+token<str_val> Assignment
+token<str_val> AssignmentExpression
+token<str_val> AssignmentOperator
+token<str_val> BasicForStatement
+token<str_val> BasicForStatementNoShortIf
+token<str_val> Block
+token<str_val> BlockStatement
+token<str_val> BlockStatements
+token<str_val> BreakStatement
+token<str_val> CaseConstants
+token<str_val> CastExpression
+token<str_val> CatchClause
+token<str_val> CatchType
+token<str_val> CatchTypes
+token<str_val> Catches
+token<str_val> ClassBody
+token<str_val> ClassBodyDeclaration
+token<str_val> ClassBodyDeclarationRec
+token<str_val> ClassDeclaration
+token<str_val> ClassInstanceCreationExpression
+token<str_val> ClassMemberDeclaration
+token<str_val> ClassOrInterfaceType
+token<str_val> ClassType
+token<str_val> ClassTypeList
+token<str_val> CompilationUnit
+token<str_val> ConditionalAndExpression
+token<str_val> ConditionalExpression
+token<str_val> ConditionalOrExpression
+token<str_val> ConstructorBody
+token<str_val> ConstructorDeclaration
+token<str_val> ConstructorDeclarator
+token<str_val> ContinueStatement
+token<str_val> DimExpr
+token<str_val> DimExprs
+token<str_val> Dims
+token<str_val> DoStatement
+token<str_val> EmptyStatement
+token<str_val> EnhancedForStatement
+token<str_val> EnhancedForStatementNoShortIf
+token<str_val> EqualityExpression
+token<str_val> ExclusiveOrExpression
+token<str_val> ExplicitConstructorInvocation
+token<str_val> Expression
+token<str_val> ExpressionStatement
+token<str_val> FieldAccess
+token<str_val> FieldDeclaration
+token<str_val> Finally
+token<str_val> FloatingPointType
+token<str_val> ForInit
+token<str_val> ForStatement
+token<str_val> ForStatementNoShortIf
+token<str_val> ForUpdate
+token<str_val> FormalParameter
+token<str_val> FormalParameterList
+token<str_val> Identifier
+token<str_val> IfThenElseStatement
+token<str_val> IfThenElseStatementNoShortIf
+token<str_val> IfThenStatement
+token<str_val> InclusiveOrExpression
+token<str_val> InstanceInitializer
+token<str_val> InstanceofExpression
+token<str_val> IntegralType
+token<str_val> LabeledStatement
+token<str_val> LabeledStatementNoShortIf
+token<str_val> LeftHandSide
+token<str_val> Literal
+token<str_val> LocalVariableDeclaration
+token<str_val> LocalVariableDeclarationStatement
+token<str_val> MethodBody
+token<str_val> MethodDeclaration
+token<str_val> MethodDeclarator
+token<str_val> MethodHeader
+token<str_val> MethodInvocation
+token<str_val> Modifier
+token<str_val> Modifiers
+token<str_val> ModularCompilationUnit
+token<str_val> ModuleDeclaration
+token<str_val> ModuleDirective
+token<str_val> ModuleDirectives
+token<str_val> MultiplicativeExpression
+token<str_val> Name
+token<str_val> Names
+token<str_val> OrdinaryCompilationUnit
+token<str_val> PackageDeclaration
+token<str_val> PostIncrementExpression
+token<str_val> PostfixExpression
+token<str_val> PreDecrementExpression
+token<str_val> PreIncrementExpression
+token<str_val> Primary
+token<str_val> PrimaryNoNewArray
+token<str_val> PrimitiveType
+token<str_val> ReferenceType
+token<str_val> RelationalExpression
+token<str_val> RequiresModifier
+token<str_val> RequiresModifiers
+token<str_val> ReturnStatement
+token<str_val> ShiftExpression
+token<str_val> Statement
+token<str_val> StatementExpression
+token<str_val> StatementExpressionList
+token<str_val> StatementNoShortIf
+token<str_val> StatementWithoutTrailingSubstatement
+token<str_val> StaticInitializer
+token<str_val> Super
+token<str_val> SwitchBlock
+token<str_val> SwitchBlockStatementGroup
+token<str_val> SwitchBlockStatementGroups
+token<str_val> SwitchExpression
+token<str_val> SwitchLabel
+token<str_val> SwitchLabels
+token<str_val> SwitchStatement
+token<str_val> SynchronizedStatement
+token<str_val> ThrowStatement
+token<str_val> Throws
+token<str_val> TopLevelClassOrInterfaceDeclaration
+token<str_val> TopLevelClassOrInterfaceDeclarations
+token<str_val> TryStatement
+token<str_val> Type
+token<str_val> UnaryExpression
+token<str_val> UnaryExpressionNotPlusMinus
+token<str_val> UnqualifiedClassInstanceCreationExpression
+token<str_val> VariableDeclarator
+token<str_val> VariableDeclaratorId
+token<str_val> VariableDeclarators
+token<str_val> VariableInitializer
+token<str_val> VariableInitializerList
+token<str_val> WhileStatement
+token<str_val> WhileStatementNoShortIf
+
+type<str_val> ABSTRACT
+type<str_val> AND
+type<str_val> ANDET
+type<str_val> ASSERT
+type<str_val> BITAND
+type<str_val> BITOR
+type<str_val> BOOLEAN
+type<str_val> BREAK
+type<str_val> CASE
+type<str_val> CATCH
+type<str_val> CLASS
+type<str_val> COLON
+type<str_val> COMMA
+type<str_val> CONTINUE
+type<str_val> DECREMENT
+type<str_val> DEFAULT
+type<str_val> DIVET
+type<str_val> DIVIDE
+type<str_val> DO
+type<str_val> DOT
+type<str_val> ELSE
+type<str_val> EQ
+type<str_val> EQUALTO
+type<str_val> EXPORTS
+type<str_val> EXTENDS
+type<str_val> FINAL
+type<str_val> FINALLY
+type<str_val> FLOATINGPOINTTYPE
+type<str_val> FOR
+type<str_val> GEQ
+type<str_val> GT
+type<str_val> IDENTIFIER
+type<str_val> IF
+type<str_val> INCREMENT
+type<str_val> INSTANCEOF
+type<str_val> INTEGRALTYPE
+type<str_val> LCB
+type<str_val> LEFTSHIFT
+type<str_val> LEQ
+type<str_val> LITERAL
+type<str_val> LRB
+type<str_val> LSB
+type<str_val> LT
+type<str_val> MINUS
+type<str_val> MINUSET
+type<str_val> MODULE
+type<str_val> MODULO
+type<str_val> MULT
+type<str_val> MULTET
+type<str_val> NATIVE
+type<str_val> NEQ
+type<str_val> NEW
+type<str_val> NOT
+type<str_val> OPENS
+type<str_val> OR
+type<str_val> PACKAGE
+type<str_val> PLUS
+type<str_val> PLUSET
+type<str_val> POW
+type<str_val> PRIVATE
+type<str_val> PROTECTED
+type<str_val> PROVIDES
+type<str_val> PUBLIC
+type<str_val> QUEST
+type<str_val> RCB
+type<str_val> REQUIRES
+type<str_val> RETURN
+type<str_val> RIGHTSHIFT
+type<str_val> RRB
+type<str_val> RSB
+type<str_val> SEMICOLON
+type<str_val> STATIC
+type<str_val> SUPER
+type<str_val> SWITCH
+type<str_val> SYNCHRONIZED
+type<str_val> THIS
+type<str_val> THREEGREAT
+type<str_val> THROW
+type<str_val> THROWS
+type<str_val> TILDE
+type<str_val> TO
+type<str_val> TRANSIENT
+type<str_val> TRANSITIVE
+type<str_val> TRY
+type<str_val> USES
+type<str_val> VAR
+type<str_val> VOID
+type<str_val> VOLATILE
+type<str_val> WHILE
+type<str_val> WITH
+
+Identifier:
+	IDENTIFIER 										{$$ = createnode("Identifier",{createnode("IDENTIFIER, {}")});}
+	;
+
+Literal:
+	LITERAL 										{$$ = createnode("Literal",{createnode("LITERAL, {}")});}
+	;
+
+IntegralType:
+	INTEGRALTYPE 										{$$ = createnode("IntegralType",{createnode("INTEGRALTYPE, {}")});}
+	;
+
+FloatingPointType:
+	FLOATINGPOINTTYPE 										{$$ = createnode("FloatingPointType",{createnode("FLOATINGPOINTTYPE, {}")});}
+	;
+
+Name:
+	Identifier 										{$$ = createnode("Name",{$1});}
+|	Name DOT Identifier 										{$$ = createnode("Name",{$1,createnode("DOT, {}"),$3});}
+	;
+
+Names:
+	Name 										{$$ = createnode("Names",{$1});}
+|	Names COMMA Name 										{$$ = createnode("Names",{$1,createnode("COMMA, {}"),$3});}
+	;
+
+CompilationUnit:
+	OrdinaryCompilationUnit 										{$$ = createnode("CompilationUnit",{$1});}
+|	ModularCompilationUnit 										{$$ = createnode("CompilationUnit",{$1});}
+	;
+
+OrdinaryCompilationUnit:
+	PackageDeclaration TopLevelClassOrInterfaceDeclarations 										{$$ = createnode("OrdinaryCompilationUnit",{$1,$2});}
+|	TopLevelClassOrInterfaceDeclarations 										{$$ = createnode("OrdinaryCompilationUnit",{$1});}
+	;
+
+TopLevelClassOrInterfaceDeclarations:
+	TopLevelClassOrInterfaceDeclaration 										{$$ = createnode("TopLevelClassOrInterfaceDeclarations",{$1});}
+|	TopLevelClassOrInterfaceDeclarations TopLevelClassOrInterfaceDeclaration 										{$$ = createnode("TopLevelClassOrInterfaceDeclarations",{$1,$2});}
+	;
+
+ModularCompilationUnit:
+	ModuleDeclaration 										{$$ = createnode("ModularCompilationUnit",{$1});}
+	;
+
+PackageDeclaration:
+	PACKAGE Name SEMICOLON 										{$$ = createnode("PackageDeclaration",{createnode("PACKAGE, {}"),$2,createnode("SEMICOLON, {}")});}
+	;
+
+TopLevelClassOrInterfaceDeclaration:
+	ClassDeclaration 										{$$ = createnode("TopLevelClassOrInterfaceDeclaration",{$1});}
+|	SEMICOLON 										{$$ = createnode("TopLevelClassOrInterfaceDeclaration",{createnode("SEMICOLON, {}")});}
+	;
+
+ModuleDeclaration:
+	MODULE Name LCB ModuleDirectives RCB 										{$$ = createnode("ModuleDeclaration",{createnode("MODULE, {}"),$2,createnode("LCB, {}"),$4,createnode("RCB, {}")});}
+	;
+
+ModuleDirectives:
+	ModuleDirective 										{$$ = createnode("ModuleDirectives",{$1});}
+|	ModuleDirectives ModuleDirective 										{$$ = createnode("ModuleDirectives",{$1,$2});}
+	;
+
+ModuleDirective:
+	REQUIRES RequiresModifiers Name SEMICOLON 										{$$ = createnode("ModuleDirective",{createnode("REQUIRES, {}"),$2,$3,createnode("SEMICOLON, {}")});}
+|	EXPORTS Name TO Names SEMICOLON 										{$$ = createnode("ModuleDirective",{createnode("EXPORTS, {}"),$2,createnode("TO, {}"),$4,createnode("SEMICOLON, {}")});}
+|	EXPORTS Name SEMICOLON 										{$$ = createnode("ModuleDirective",{createnode("EXPORTS, {}"),$2,createnode("SEMICOLON, {}")});}
+|	OPENS Name SEMICOLON 										{$$ = createnode("ModuleDirective",{createnode("OPENS, {}"),$2,createnode("SEMICOLON, {}")});}
+|	OPENS Name TO Names SEMICOLON 										{$$ = createnode("ModuleDirective",{createnode("OPENS, {}"),$2,createnode("TO, {}"),$4,createnode("SEMICOLON, {}")});}
+|	USES Name SEMICOLON 										{$$ = createnode("ModuleDirective",{createnode("USES, {}"),$2,createnode("SEMICOLON, {}")});}
+|	PROVIDES Name WITH Names SEMICOLON 										{$$ = createnode("ModuleDirective",{createnode("PROVIDES, {}"),$2,createnode("WITH, {}"),$4,createnode("SEMICOLON, {}")});}
+	;
+
+RequiresModifiers:
+	RequiresModifier 										{$$ = createnode("RequiresModifiers",{$1});}
+|	RequiresModifiers RequiresModifier 										{$$ = createnode("RequiresModifiers",{$1,$2});}
+	;
+
+RequiresModifier:
+	TRANSITIVE 										{$$ = createnode("RequiresModifier",{createnode("TRANSITIVE, {}")});}
+|	STATIC 										{$$ = createnode("RequiresModifier",{createnode("STATIC, {}")});}
+	;
+
+Type:
+	PrimitiveType 										{$$ = createnode("Type",{$1});}
+|	ReferenceType 										{$$ = createnode("Type",{$1});}
+	;
+
+PrimitiveType:
+	IntegralType 										{$$ = createnode("PrimitiveType",{$1});}
+|	FloatingPointType 										{$$ = createnode("PrimitiveType",{$1});}
+|	BOOLEAN 										{$$ = createnode("PrimitiveType",{createnode("BOOLEAN, {}")});}
+	;
+
+ReferenceType:
+	ClassOrInterfaceType 										{$$ = createnode("ReferenceType",{$1});}
+|	ArrayType 										{$$ = createnode("ReferenceType",{$1});}
+	;
+
+ArrayType:
+	PrimitiveType Dims 										{$$ = createnode("ArrayType",{$1,$2});}
+|	ClassOrInterfaceType Dims 										{$$ = createnode("ArrayType",{$1,$2});}
+	;
+
+ClassOrInterfaceType:
+	ClassType 										{$$ = createnode("ClassOrInterfaceType",{$1});}
+	;
+
+ClassType:
+	Name 										{$$ = createnode("ClassType",{$1});}
+	;
+
+ClassDeclaration:
+	Modifiers CLASS Identifier Super ClassBody 										{$$ = createnode("ClassDeclaration",{$1,createnode("CLASS, {}"),$3,$4,$5});}
+|	CLASS Identifier Super ClassBody 										{$$ = createnode("ClassDeclaration",{createnode("CLASS, {}"),$2,$3,$4});}
+|	Modifiers CLASS Identifier ClassBody 										{$$ = createnode("ClassDeclaration",{$1,createnode("CLASS, {}"),$3,$4});}
+|	CLASS Identifier ClassBody 										{$$ = createnode("ClassDeclaration",{createnode("CLASS, {}"),$2,$3});}
+	;
+
+Modifiers:
+	Modifier 										{$$ = createnode("Modifiers",{$1});}
+|	Modifiers Modifier 										{$$ = createnode("Modifiers",{$1,$2});}
+	;
+
+Modifier:
+	PUBLIC 										{$$ = createnode("Modifier",{createnode("PUBLIC, {}")});}
+|	PROTECTED 										{$$ = createnode("Modifier",{createnode("PROTECTED, {}")});}
+|	PRIVATE 										{$$ = createnode("Modifier",{createnode("PRIVATE, {}")});}
+|	STATIC 										{$$ = createnode("Modifier",{createnode("STATIC, {}")});}
+|	ABSTRACT 										{$$ = createnode("Modifier",{createnode("ABSTRACT, {}")});}
+|	FINAL 										{$$ = createnode("Modifier",{createnode("FINAL, {}")});}
+|	NATIVE 										{$$ = createnode("Modifier",{createnode("NATIVE, {}")});}
+|	SYNCHRONIZED 										{$$ = createnode("Modifier",{createnode("SYNCHRONIZED, {}")});}
+|	TRANSIENT 										{$$ = createnode("Modifier",{createnode("TRANSIENT, {}")});}
+|	VOLATILE 										{$$ = createnode("Modifier",{createnode("VOLATILE, {}")});}
+	;
+
+Super:
+	EXTENDS ClassType 										{$$ = createnode("Super",{createnode("EXTENDS, {}"),$2});}
+	;
+
+ClassBody:
+	LCB RCB 										{$$ = createnode("ClassBody",{createnode("LCB, {}"),createnode("RCB, {}")});}
+|	LCB ClassBodyDeclarationRec RCB 										{$$ = createnode("ClassBody",{createnode("LCB, {}"),$2,createnode("RCB, {}")});}
+	;
+
+ClassBodyDeclarationRec:
+	ClassBodyDeclaration 										{$$ = createnode("ClassBodyDeclarationRec",{$1});}
+|	ClassBodyDeclarationRec ClassBodyDeclaration 										{$$ = createnode("ClassBodyDeclarationRec",{$1,$2});}
+	;
+
+ClassBodyDeclaration:
+	ClassMemberDeclaration 										{$$ = createnode("ClassBodyDeclaration",{$1});}
+|	StaticInitializer 										{$$ = createnode("ClassBodyDeclaration",{$1});}
+|	ConstructorDeclaration 										{$$ = createnode("ClassBodyDeclaration",{$1});}
+|	InstanceInitializer 										{$$ = createnode("ClassBodyDeclaration",{$1});}
+	;
+
+ClassMemberDeclaration:
+	FieldDeclaration 										{$$ = createnode("ClassMemberDeclaration",{$1});}
+|	MethodDeclaration 										{$$ = createnode("ClassMemberDeclaration",{$1});}
+	;
+
+FieldDeclaration:
+	Modifiers Type VariableDeclarators SEMICOLON 										{$$ = createnode("FieldDeclaration",{$1,$2,$3,createnode("SEMICOLON, {}")});}
+|	Type VariableDeclarators SEMICOLON 										{$$ = createnode("FieldDeclaration",{$1,$2,createnode("SEMICOLON, {}")});}
+	;
+
+VariableDeclarators:
+	VariableDeclarator 										{$$ = createnode("VariableDeclarators",{$1});}
+|	VariableDeclarators COMMA VariableDeclarator 										{$$ = createnode("VariableDeclarators",{$1,createnode("COMMA, {}"),$3});}
+	;
+
+VariableDeclarator:
+	VariableDeclaratorId 										{$$ = createnode("VariableDeclarator",{$1});}
+|	VariableDeclaratorId EQUALTO VariableInitializer 										{$$ = createnode("VariableDeclarator",{$1,createnode("EQUALTO, {}"),$3});}
+	;
+
+VariableDeclaratorId:
+	Identifier 										{$$ = createnode("VariableDeclaratorId",{$1});}
+|	VariableDeclaratorId LSB RSB 										{$$ = createnode("VariableDeclaratorId",{$1,createnode("LSB, {}"),createnode("RSB, {}")});}
+	;
+
+VariableInitializer:
+	Expression 										{$$ = createnode("VariableInitializer",{$1});}
+|	ArrayInitializer 										{$$ = createnode("VariableInitializer",{$1});}
+	;
+
+MethodDeclaration:
+	MethodHeader MethodBody 										{$$ = createnode("MethodDeclaration",{$1,$2});}
+	;
+
+MethodHeader:
+	Modifiers Type MethodDeclarator Throws 										{$$ = createnode("MethodHeader",{$1,$2,$3,$4});}
+|	Type MethodDeclarator Throws 										{$$ = createnode("MethodHeader",{$1,$2,$3});}
+|	Modifiers Type MethodDeclarator 										{$$ = createnode("MethodHeader",{$1,$2,$3});}
+|	Type MethodDeclarator 										{$$ = createnode("MethodHeader",{$1,$2});}
+|	Modifiers VOID MethodDeclarator Throws 										{$$ = createnode("MethodHeader",{$1,createnode("VOID, {}"),$3,$4});}
+|	VOID MethodDeclarator Throws 										{$$ = createnode("MethodHeader",{createnode("VOID, {}"),$2,$3});}
+|	Modifiers VOID MethodDeclarator 										{$$ = createnode("MethodHeader",{$1,createnode("VOID, {}"),$3});}
+|	VOID MethodDeclarator 										{$$ = createnode("MethodHeader",{createnode("VOID, {}"),$2});}
+	;
+
+MethodDeclarator:
+	Identifier LRB FormalParameterList RRB 										{$$ = createnode("MethodDeclarator",{$1,createnode("LRB, {}"),$3,createnode("RRB, {}")});}
+|	Identifier LRB RRB 										{$$ = createnode("MethodDeclarator",{$1,createnode("LRB, {}"),createnode("RRB, {}")});}
+|	MethodDeclarator LSB RSB 										{$$ = createnode("MethodDeclarator",{$1,createnode("LSB, {}"),createnode("RSB, {}")});}
+	;
+
+FormalParameterList:
+	FormalParameter 										{$$ = createnode("FormalParameterList",{$1});}
+|	FormalParameterList COMMA FormalParameter 										{$$ = createnode("FormalParameterList",{$1,createnode("COMMA, {}"),$3});}
+	;
+
+FormalParameter:
+	Type VariableDeclaratorId 										{$$ = createnode("FormalParameter",{$1,$2});}
+	;
+
+Throws:
+	THROWS ClassTypeList 										{$$ = createnode("Throws",{createnode("THROWS, {}"),$2});}
+	;
+
+ClassTypeList:
+	ClassType 										{$$ = createnode("ClassTypeList",{$1});}
+|	ClassTypeList COMMA ClassType 										{$$ = createnode("ClassTypeList",{$1,createnode("COMMA, {}"),$3});}
+	;
+
+MethodBody:
+	Block 										{$$ = createnode("MethodBody",{$1});}
+|	SEMICOLON 										{$$ = createnode("MethodBody",{createnode("SEMICOLON, {}")});}
+	;
+
+InstanceInitializer:
+	Block 										{$$ = createnode("InstanceInitializer",{$1});}
+	;
+
+StaticInitializer:
+	STATIC Block 										{$$ = createnode("StaticInitializer",{createnode("STATIC, {}"),$2});}
+	;
+
+ConstructorDeclaration:
+	Modifiers ConstructorDeclarator Throws ConstructorBody 										{$$ = createnode("ConstructorDeclaration",{$1,$2,$3,$4});}
+|	ConstructorDeclarator Throws ConstructorBody 										{$$ = createnode("ConstructorDeclaration",{$1,$2,$3});}
+|	Modifiers ConstructorDeclarator ConstructorBody 										{$$ = createnode("ConstructorDeclaration",{$1,$2,$3});}
+|	ConstructorDeclarator ConstructorBody 										{$$ = createnode("ConstructorDeclaration",{$1,$2});}
+	;
+
+ConstructorDeclarator:
+	Identifier LRB FormalParameterList RRB 										{$$ = createnode("ConstructorDeclarator",{$1,createnode("LRB, {}"),$3,createnode("RRB, {}")});}
+|	Identifier LRB RRB 										{$$ = createnode("ConstructorDeclarator",{$1,createnode("LRB, {}"),createnode("RRB, {}")});}
+	;
+
+ConstructorBody:
+	LCB ExplicitConstructorInvocation BlockStatements RCB 										{$$ = createnode("ConstructorBody",{createnode("LCB, {}"),$2,$3,createnode("RCB, {}")});}
+|	LCB BlockStatements RCB 										{$$ = createnode("ConstructorBody",{createnode("LCB, {}"),$2,createnode("RCB, {}")});}
+|	LCB ExplicitConstructorInvocation RCB 										{$$ = createnode("ConstructorBody",{createnode("LCB, {}"),$2,createnode("RCB, {}")});}
+|	LCB RCB 										{$$ = createnode("ConstructorBody",{createnode("LCB, {}"),createnode("RCB, {}")});}
+	;
+
+ExplicitConstructorInvocation:
+	THIS LRB ArgumentList RRB SEMICOLON 										{$$ = createnode("ExplicitConstructorInvocation",{createnode("THIS, {}"),createnode("LRB, {}"),$3,createnode("RRB, {}"),createnode("SEMICOLON, {}")});}
+|	THIS LRB RRB SEMICOLON 										{$$ = createnode("ExplicitConstructorInvocation",{createnode("THIS, {}"),createnode("LRB, {}"),createnode("RRB, {}"),createnode("SEMICOLON, {}")});}
+|	SUPER LRB ArgumentList RRB SEMICOLON 										{$$ = createnode("ExplicitConstructorInvocation",{createnode("SUPER, {}"),createnode("LRB, {}"),$3,createnode("RRB, {}"),createnode("SEMICOLON, {}")});}
+|	SUPER LRB RRB SEMICOLON 										{$$ = createnode("ExplicitConstructorInvocation",{createnode("SUPER, {}"),createnode("LRB, {}"),createnode("RRB, {}"),createnode("SEMICOLON, {}")});}
+|	Name DOT SUPER LRB RRB SEMICOLON 										{$$ = createnode("ExplicitConstructorInvocation",{$1,createnode("DOT, {}"),createnode("SUPER, {}"),createnode("LRB, {}"),createnode("RRB, {}"),createnode("SEMICOLON, {}")});}
+|	Name DOT SUPER LRB ArgumentList RRB SEMICOLON 										{$$ = createnode("ExplicitConstructorInvocation",{$1,createnode("DOT, {}"),createnode("SUPER, {}"),createnode("LRB, {}"),$5,createnode("RRB, {}"),createnode("SEMICOLON, {}")});}
+|	Primary DOT SUPER LRB RRB SEMICOLON 										{$$ = createnode("ExplicitConstructorInvocation",{$1,createnode("DOT, {}"),createnode("SUPER, {}"),createnode("LRB, {}"),createnode("RRB, {}"),createnode("SEMICOLON, {}")});}
+|	Primary DOT SUPER LRB ArgumentList RRB SEMICOLON 										{$$ = createnode("ExplicitConstructorInvocation",{$1,createnode("DOT, {}"),createnode("SUPER, {}"),createnode("LRB, {}"),$5,createnode("RRB, {}"),createnode("SEMICOLON, {}")});}
+	;
+
+ArrayInitializer:
+	LCB RCB 										{$$ = createnode("ArrayInitializer",{createnode("LCB, {}"),createnode("RCB, {}")});}
+|	LCB VariableInitializerList RCB 										{$$ = createnode("ArrayInitializer",{createnode("LCB, {}"),$2,createnode("RCB, {}")});}
+|	LCB COMMA RCB 										{$$ = createnode("ArrayInitializer",{createnode("LCB, {}"),createnode("COMMA, {}"),createnode("RCB, {}")});}
+|	LCB VariableInitializerList COMMA RCB 										{$$ = createnode("ArrayInitializer",{createnode("LCB, {}"),$2,createnode("COMMA, {}"),createnode("RCB, {}")});}
+	;
+
+VariableInitializerList:
+	VariableInitializer 										{$$ = createnode("VariableInitializerList",{$1});}
+|	VariableInitializerList COMMA VariableInitializer 										{$$ = createnode("VariableInitializerList",{$1,createnode("COMMA, {}"),$3});}
+	;
+
+Block:
+	LCB BlockStatements RCB 										{$$ = createnode("Block",{createnode("LCB, {}"),$2,createnode("RCB, {}")});}
+|	LCB RCB 										{$$ = createnode("Block",{createnode("LCB, {}"),createnode("RCB, {}")});}
+	;
+
+BlockStatements:
+	BlockStatements BlockStatement 										{$$ = createnode("BlockStatements",{$1,$2});}
+|	BlockStatement 										{$$ = createnode("BlockStatements",{$1});}
+	;
+
+BlockStatement:
+	LocalVariableDeclarationStatement 										{$$ = createnode("BlockStatement",{$1});}
+|	Statement 										{$$ = createnode("BlockStatement",{$1});}
+	;
+
+LocalVariableDeclarationStatement:
+	LocalVariableDeclaration SEMICOLON 										{$$ = createnode("LocalVariableDeclarationStatement",{$1,createnode("SEMICOLON, {}")});}
+	;
+
+LocalVariableDeclaration:
+	Type VariableDeclarators 										{$$ = createnode("LocalVariableDeclaration",{$1,$2});}
+|	VAR VariableDeclarators 										{$$ = createnode("LocalVariableDeclaration",{createnode("VAR, {}"),$2});}
+	;
+
+Statement:
+	StatementWithoutTrailingSubstatement 										{$$ = createnode("Statement",{$1});}
+|	LabeledStatement 										{$$ = createnode("Statement",{$1});}
+|	IfThenStatement 										{$$ = createnode("Statement",{$1});}
+|	IfThenElseStatement 										{$$ = createnode("Statement",{$1});}
+|	WhileStatement 										{$$ = createnode("Statement",{$1});}
+|	ForStatement 										{$$ = createnode("Statement",{$1});}
+	;
+
+StatementNoShortIf:
+	StatementWithoutTrailingSubstatement 										{$$ = createnode("StatementNoShortIf",{$1});}
+|	LabeledStatementNoShortIf 										{$$ = createnode("StatementNoShortIf",{$1});}
+|	IfThenElseStatementNoShortIf 										{$$ = createnode("StatementNoShortIf",{$1});}
+|	WhileStatementNoShortIf 										{$$ = createnode("StatementNoShortIf",{$1});}
+|	ForStatementNoShortIf 										{$$ = createnode("StatementNoShortIf",{$1});}
+	;
+
+StatementWithoutTrailingSubstatement:
+	Block 										{$$ = createnode("StatementWithoutTrailingSubstatement",{$1});}
+|	EmptyStatement 										{$$ = createnode("StatementWithoutTrailingSubstatement",{$1});}
+|	ExpressionStatement 										{$$ = createnode("StatementWithoutTrailingSubstatement",{$1});}
+|	AssertStatement 										{$$ = createnode("StatementWithoutTrailingSubstatement",{$1});}
+|	SwitchStatement 										{$$ = createnode("StatementWithoutTrailingSubstatement",{$1});}
+|	DoStatement 										{$$ = createnode("StatementWithoutTrailingSubstatement",{$1});}
+|	BreakStatement 										{$$ = createnode("StatementWithoutTrailingSubstatement",{$1});}
+|	ContinueStatement 										{$$ = createnode("StatementWithoutTrailingSubstatement",{$1});}
+|	ReturnStatement 										{$$ = createnode("StatementWithoutTrailingSubstatement",{$1});}
+|	SynchronizedStatement 										{$$ = createnode("StatementWithoutTrailingSubstatement",{$1});}
+|	ThrowStatement 										{$$ = createnode("StatementWithoutTrailingSubstatement",{$1});}
+|	TryStatement 										{$$ = createnode("StatementWithoutTrailingSubstatement",{$1});}
+	;
+
+AssertStatement:
+	ASSERT Expression SEMICOLON 										{$$ = createnode("AssertStatement",{createnode("ASSERT, {}"),$2,createnode("SEMICOLON, {}")});}
+|	ASSERT Expression COLON Expression SEMICOLON 										{$$ = createnode("AssertStatement",{createnode("ASSERT, {}"),$2,createnode("COLON, {}"),$4,createnode("SEMICOLON, {}")});}
+	;
+
+EmptyStatement:
+	SEMICOLON 										{$$ = createnode("EmptyStatement",{createnode("SEMICOLON, {}")});}
+	;
+
+LabeledStatement:
+	Identifier COLON Statement 										{$$ = createnode("LabeledStatement",{$1,createnode("COLON, {}"),$3});}
+	;
+
+LabeledStatementNoShortIf:
+	Identifier COLON StatementNoShortIf 										{$$ = createnode("LabeledStatementNoShortIf",{$1,createnode("COLON, {}"),$3});}
+	;
+
+ExpressionStatement:
+	StatementExpression SEMICOLON 										{$$ = createnode("ExpressionStatement",{$1,createnode("SEMICOLON, {}")});}
+	;
+
+StatementExpression:
+	Assignment 										{$$ = createnode("StatementExpression",{$1});}
+|	PreIncrementExpression 										{$$ = createnode("StatementExpression",{$1});}
+|	PreDecrementExpression 										{$$ = createnode("StatementExpression",{$1});}
+|	PostIncrementExpression 										{$$ = createnode("StatementExpression",{$1});}
+|	MethodInvocation 										{$$ = createnode("StatementExpression",{$1});}
+|	ClassInstanceCreationExpression 										{$$ = createnode("StatementExpression",{$1});}
+	;
+
+IfThenStatement:
+	IF LRB Expression RRB Statement 										{$$ = createnode("IfThenStatement",{createnode("IF, {}"),createnode("LRB, {}"),$3,createnode("RRB, {}"),$5});}
+	;
+
+IfThenElseStatement:
+	IF LRB Expression RRB StatementNoShortIf ELSE Statement 										{$$ = createnode("IfThenElseStatement",{createnode("IF, {}"),createnode("LRB, {}"),$3,createnode("RRB, {}"),$5,createnode("ELSE, {}"),$7});}
+	;
+
+IfThenElseStatementNoShortIf:
+	IF LRB Expression RRB StatementNoShortIf ELSE StatementNoShortIf 										{$$ = createnode("IfThenElseStatementNoShortIf",{createnode("IF, {}"),createnode("LRB, {}"),$3,createnode("RRB, {}"),$5,createnode("ELSE, {}"),$7});}
+	;
+
+SwitchStatement:
+	SWITCH LRB Expression RRB SwitchBlock 										{$$ = createnode("SwitchStatement",{createnode("SWITCH, {}"),createnode("LRB, {}"),$3,createnode("RRB, {}"),$5});}
+	;
+
+SwitchBlock:
+	LCB SwitchBlockStatementGroups SwitchLabels RCB 										{$$ = createnode("SwitchBlock",{createnode("LCB, {}"),$2,$3,createnode("RCB, {}")});}
+|	LCB SwitchLabels RCB 										{$$ = createnode("SwitchBlock",{createnode("LCB, {}"),$2,createnode("RCB, {}")});}
+|	LCB SwitchBlockStatementGroups RCB 										{$$ = createnode("SwitchBlock",{createnode("LCB, {}"),$2,createnode("RCB, {}")});}
+|	LCB RCB 										{$$ = createnode("SwitchBlock",{createnode("LCB, {}"),createnode("RCB, {}")});}
+	;
+
+SwitchBlockStatementGroups:
+	SwitchBlockStatementGroup 										{$$ = createnode("SwitchBlockStatementGroups",{$1});}
+|	SwitchBlockStatementGroups SwitchBlockStatementGroup 										{$$ = createnode("SwitchBlockStatementGroups",{$1,$2});}
+	;
+
+SwitchLabels:
+	SwitchLabel 										{$$ = createnode("SwitchLabels",{$1});}
+|	SwitchLabels SwitchLabel 										{$$ = createnode("SwitchLabels",{$1,$2});}
+	;
+
+SwitchBlockStatementGroup:
+	SwitchLabels BlockStatements 										{$$ = createnode("SwitchBlockStatementGroup",{$1,$2});}
+	;
+
+SwitchLabel:
+	CASE CaseConstants COLON 										{$$ = createnode("SwitchLabel",{createnode("CASE, {}"),$2,createnode("COLON, {}")});}
+|	DEFAULT COLON 										{$$ = createnode("SwitchLabel",{createnode("DEFAULT, {}"),createnode("COLON, {}")});}
+	;
+
+CaseConstants:
+	ConditionalExpression 										{$$ = createnode("CaseConstants",{$1});}
+|	CaseConstants COMMA ConditionalExpression 										{$$ = createnode("CaseConstants",{$1,createnode("COMMA, {}"),$3});}
+	;
+
+WhileStatement:
+	WHILE LRB Expression RRB Statement 										{$$ = createnode("WhileStatement",{createnode("WHILE, {}"),createnode("LRB, {}"),$3,createnode("RRB, {}"),$5});}
+	;
+
+WhileStatementNoShortIf:
+	WHILE LRB Expression RRB StatementNoShortIf 										{$$ = createnode("WhileStatementNoShortIf",{createnode("WHILE, {}"),createnode("LRB, {}"),$3,createnode("RRB, {}"),$5});}
+	;
+
+DoStatement:
+	DO Statement WHILE LRB Expression RRB SEMICOLON 										{$$ = createnode("DoStatement",{createnode("DO, {}"),$2,createnode("WHILE, {}"),createnode("LRB, {}"),$5,createnode("RRB, {}"),createnode("SEMICOLON, {}")});}
+	;
+
+ForStatement:
+	BasicForStatement 										{$$ = createnode("ForStatement",{$1});}
+|	EnhancedForStatement 										{$$ = createnode("ForStatement",{$1});}
+	;
+
+ForStatementNoShortIf:
+	BasicForStatementNoShortIf 										{$$ = createnode("ForStatementNoShortIf",{$1});}
+|	EnhancedForStatementNoShortIf 										{$$ = createnode("ForStatementNoShortIf",{$1});}
+	;
+
+BasicForStatement:
+	FOR LRB ForInit SEMICOLON Expression SEMICOLON ForUpdate RRB Statement 										{$$ = createnode("BasicForStatement",{createnode("FOR, {}"),createnode("LRB, {}"),$3,createnode("SEMICOLON, {}"),$5,createnode("SEMICOLON, {}"),$7,createnode("RRB, {}"),$9});}
+|	FOR LRB SEMICOLON Expression SEMICOLON ForUpdate RRB Statement 										{$$ = createnode("BasicForStatement",{createnode("FOR, {}"),createnode("LRB, {}"),createnode("SEMICOLON, {}"),$4,createnode("SEMICOLON, {}"),$6,createnode("RRB, {}"),$8});}
+|	FOR LRB ForInit SEMICOLON SEMICOLON ForUpdate RRB Statement 										{$$ = createnode("BasicForStatement",{createnode("FOR, {}"),createnode("LRB, {}"),$3,createnode("SEMICOLON, {}"),createnode("SEMICOLON, {}"),$6,createnode("RRB, {}"),$8});}
+|	FOR LRB SEMICOLON SEMICOLON ForUpdate RRB Statement 										{$$ = createnode("BasicForStatement",{createnode("FOR, {}"),createnode("LRB, {}"),createnode("SEMICOLON, {}"),createnode("SEMICOLON, {}"),$5,createnode("RRB, {}"),$7});}
+|	FOR LRB ForInit SEMICOLON Expression SEMICOLON RRB Statement 										{$$ = createnode("BasicForStatement",{createnode("FOR, {}"),createnode("LRB, {}"),$3,createnode("SEMICOLON, {}"),$5,createnode("SEMICOLON, {}"),createnode("RRB, {}"),$8});}
+|	FOR LRB SEMICOLON Expression SEMICOLON RRB Statement 										{$$ = createnode("BasicForStatement",{createnode("FOR, {}"),createnode("LRB, {}"),createnode("SEMICOLON, {}"),$4,createnode("SEMICOLON, {}"),createnode("RRB, {}"),$7});}
+|	FOR LRB ForInit SEMICOLON SEMICOLON RRB Statement 										{$$ = createnode("BasicForStatement",{createnode("FOR, {}"),createnode("LRB, {}"),$3,createnode("SEMICOLON, {}"),createnode("SEMICOLON, {}"),createnode("RRB, {}"),$7});}
+|	FOR LRB SEMICOLON SEMICOLON RRB Statement 										{$$ = createnode("BasicForStatement",{createnode("FOR, {}"),createnode("LRB, {}"),createnode("SEMICOLON, {}"),createnode("SEMICOLON, {}"),createnode("RRB, {}"),$6});}
+	;
+
+BasicForStatementNoShortIf:
+	FOR LRB ForInit SEMICOLON Expression SEMICOLON ForUpdate RRB StatementNoShortIf 										{$$ = createnode("BasicForStatementNoShortIf",{createnode("FOR, {}"),createnode("LRB, {}"),$3,createnode("SEMICOLON, {}"),$5,createnode("SEMICOLON, {}"),$7,createnode("RRB, {}"),$9});}
+|	FOR LRB SEMICOLON Expression SEMICOLON ForUpdate RRB StatementNoShortIf 										{$$ = createnode("BasicForStatementNoShortIf",{createnode("FOR, {}"),createnode("LRB, {}"),createnode("SEMICOLON, {}"),$4,createnode("SEMICOLON, {}"),$6,createnode("RRB, {}"),$8});}
+|	FOR LRB ForInit SEMICOLON SEMICOLON ForUpdate RRB StatementNoShortIf 										{$$ = createnode("BasicForStatementNoShortIf",{createnode("FOR, {}"),createnode("LRB, {}"),$3,createnode("SEMICOLON, {}"),createnode("SEMICOLON, {}"),$6,createnode("RRB, {}"),$8});}
+|	FOR LRB SEMICOLON SEMICOLON ForUpdate RRB StatementNoShortIf 										{$$ = createnode("BasicForStatementNoShortIf",{createnode("FOR, {}"),createnode("LRB, {}"),createnode("SEMICOLON, {}"),createnode("SEMICOLON, {}"),$5,createnode("RRB, {}"),$7});}
+|	FOR LRB ForInit SEMICOLON Expression SEMICOLON RRB StatementNoShortIf 										{$$ = createnode("BasicForStatementNoShortIf",{createnode("FOR, {}"),createnode("LRB, {}"),$3,createnode("SEMICOLON, {}"),$5,createnode("SEMICOLON, {}"),createnode("RRB, {}"),$8});}
+|	FOR LRB SEMICOLON Expression SEMICOLON RRB StatementNoShortIf 										{$$ = createnode("BasicForStatementNoShortIf",{createnode("FOR, {}"),createnode("LRB, {}"),createnode("SEMICOLON, {}"),$4,createnode("SEMICOLON, {}"),createnode("RRB, {}"),$7});}
+|	FOR LRB ForInit SEMICOLON SEMICOLON RRB StatementNoShortIf 										{$$ = createnode("BasicForStatementNoShortIf",{createnode("FOR, {}"),createnode("LRB, {}"),$3,createnode("SEMICOLON, {}"),createnode("SEMICOLON, {}"),createnode("RRB, {}"),$7});}
+|	FOR LRB SEMICOLON SEMICOLON RRB StatementNoShortIf 										{$$ = createnode("BasicForStatementNoShortIf",{createnode("FOR, {}"),createnode("LRB, {}"),createnode("SEMICOLON, {}"),createnode("SEMICOLON, {}"),createnode("RRB, {}"),$6});}
+	;
+
+ForInit:
+	StatementExpressionList 										{$$ = createnode("ForInit",{$1});}
+|	LocalVariableDeclaration 										{$$ = createnode("ForInit",{$1});}
+	;
+
+ForUpdate:
+	StatementExpressionList 										{$$ = createnode("ForUpdate",{$1});}
+	;
+
+StatementExpressionList:
+	StatementExpressionList COMMA StatementExpression 										{$$ = createnode("StatementExpressionList",{$1,createnode("COMMA, {}"),$3});}
+|	StatementExpression 										{$$ = createnode("StatementExpressionList",{$1});}
+	;
+
+EnhancedForStatement:
+	FOR LRB LocalVariableDeclaration COLON Expression RRB Statement 										{$$ = createnode("EnhancedForStatement",{createnode("FOR, {}"),createnode("LRB, {}"),$3,createnode("COLON, {}"),$5,createnode("RRB, {}"),$7});}
+	;
+
+EnhancedForStatementNoShortIf:
+	FOR LRB LocalVariableDeclaration COLON Expression RRB StatementNoShortIf 										{$$ = createnode("EnhancedForStatementNoShortIf",{createnode("FOR, {}"),createnode("LRB, {}"),$3,createnode("COLON, {}"),$5,createnode("RRB, {}"),$7});}
+	;
+
+BreakStatement:
+	BREAK Identifier SEMICOLON 										{$$ = createnode("BreakStatement",{createnode("BREAK, {}"),$2,createnode("SEMICOLON, {}")});}
+|	BREAK SEMICOLON 										{$$ = createnode("BreakStatement",{createnode("BREAK, {}"),createnode("SEMICOLON, {}")});}
+	;
+
+ContinueStatement:
+	CONTINUE Identifier SEMICOLON 										{$$ = createnode("ContinueStatement",{createnode("CONTINUE, {}"),$2,createnode("SEMICOLON, {}")});}
+|	CONTINUE SEMICOLON 										{$$ = createnode("ContinueStatement",{createnode("CONTINUE, {}"),createnode("SEMICOLON, {}")});}
+	;
+
+ReturnStatement:
+	RETURN SEMICOLON 										{$$ = createnode("ReturnStatement",{createnode("RETURN, {}"),createnode("SEMICOLON, {}")});}
+|	RETURN Expression SEMICOLON 										{$$ = createnode("ReturnStatement",{createnode("RETURN, {}"),$2,createnode("SEMICOLON, {}")});}
+	;
+
+ThrowStatement:
+	THROW Expression SEMICOLON 										{$$ = createnode("ThrowStatement",{createnode("THROW, {}"),$2,createnode("SEMICOLON, {}")});}
+	;
+
+SynchronizedStatement:
+	SYNCHRONIZED LRB Expression RRB Block 										{$$ = createnode("SynchronizedStatement",{createnode("SYNCHRONIZED, {}"),createnode("LRB, {}"),$3,createnode("RRB, {}"),$5});}
+	;
+
+TryStatement:
+	TRY Block Catches 										{$$ = createnode("TryStatement",{createnode("TRY, {}"),$2,$3});}
+|	TRY Block Finally 										{$$ = createnode("TryStatement",{createnode("TRY, {}"),$2,$3});}
+|	TRY Block Catches Finally 										{$$ = createnode("TryStatement",{createnode("TRY, {}"),$2,$3,$4});}
+	;
+
+Catches:
+	Catches CatchClause 										{$$ = createnode("Catches",{$1,$2});}
+|	CatchClause 										{$$ = createnode("Catches",{$1});}
+	;
+
+CatchClause:
+	CATCH LRB CatchType VariableDeclaratorId RRB Block 										{$$ = createnode("CatchClause",{createnode("CATCH, {}"),createnode("LRB, {}"),$3,$4,createnode("RRB, {}"),$6});}
+	;
+
+CatchType:
+	Name 										{$$ = createnode("CatchType",{$1});}
+|	Name CatchTypes 										{$$ = createnode("CatchType",{$1,$2});}
+	;
+
+CatchTypes:
+	BITOR ClassType 										{$$ = createnode("CatchTypes",{createnode("BITOR, {}"),$2});}
+|	CatchTypes BITOR CatchType 										{$$ = createnode("CatchTypes",{$1,createnode("BITOR, {}"),$3});}
+	;
+
+Finally:
+	FINALLY Block 										{$$ = createnode("Finally",{createnode("FINALLY, {}"),$2});}
+	;
+
+Primary:
+	PrimaryNoNewArray 										{$$ = createnode("Primary",{$1});}
+|	ArrayCreationExpression 										{$$ = createnode("Primary",{$1});}
+	;
+
+PrimaryNoNewArray:
+	Literal 										{$$ = createnode("PrimaryNoNewArray",{$1});}
+|	THIS 										{$$ = createnode("PrimaryNoNewArray",{createnode("THIS, {}")});}
+|	Name DOT THIS 										{$$ = createnode("PrimaryNoNewArray",{$1,createnode("DOT, {}"),createnode("THIS, {}")});}
+|	LRB Expression RRB 										{$$ = createnode("PrimaryNoNewArray",{createnode("LRB, {}"),$2,createnode("RRB, {}")});}
+|	ClassInstanceCreationExpression 										{$$ = createnode("PrimaryNoNewArray",{$1});}
+|	FieldAccess 										{$$ = createnode("PrimaryNoNewArray",{$1});}
+|	ArrayAccess 										{$$ = createnode("PrimaryNoNewArray",{$1});}
+|	MethodInvocation 										{$$ = createnode("PrimaryNoNewArray",{$1});}
+	;
+
+ClassInstanceCreationExpression:
+	UnqualifiedClassInstanceCreationExpression 										{$$ = createnode("ClassInstanceCreationExpression",{$1});}
+|	Name DOT UnqualifiedClassInstanceCreationExpression 										{$$ = createnode("ClassInstanceCreationExpression",{$1,createnode("DOT, {}"),$3});}
+|	Primary DOT UnqualifiedClassInstanceCreationExpression 										{$$ = createnode("ClassInstanceCreationExpression",{$1,createnode("DOT, {}"),$3});}
+	;
+
+UnqualifiedClassInstanceCreationExpression:
+	NEW ClassOrInterfaceType LRB ArgumentList RRB 										{$$ = createnode("UnqualifiedClassInstanceCreationExpression",{createnode("NEW, {}"),$2,createnode("LRB, {}"),$4,createnode("RRB, {}")});}
+|	NEW ClassOrInterfaceType LRB RRB 										{$$ = createnode("UnqualifiedClassInstanceCreationExpression",{createnode("NEW, {}"),$2,createnode("LRB, {}"),createnode("RRB, {}")});}
+	;
+
+FieldAccess:
+	Primary DOT Identifier 										{$$ = createnode("FieldAccess",{$1,createnode("DOT, {}"),$3});}
+|	SUPER DOT Identifier 										{$$ = createnode("FieldAccess",{createnode("SUPER, {}"),createnode("DOT, {}"),$3});}
+|	Name DOT Identifier 										{$$ = createnode("FieldAccess",{$1,createnode("DOT, {}"),$3});}
+	;
+
+ArrayAccess:
+	Name LSB Expression RSB 										{$$ = createnode("ArrayAccess",{$1,createnode("LSB, {}"),$3,createnode("RSB, {}")});}
+|	PrimaryNoNewArray LSB Expression RSB 										{$$ = createnode("ArrayAccess",{$1,createnode("LSB, {}"),$3,createnode("RSB, {}")});}
+	;
+
+MethodInvocation:
+	Name LRB RSB 										{$$ = createnode("MethodInvocation",{$1,createnode("LRB, {}"),createnode("RSB, {}")});}
+|	Name LRB ArgumentList RRB 										{$$ = createnode("MethodInvocation",{$1,createnode("LRB, {}"),$3,createnode("RRB, {}")});}
+|	Primary DOT Identifier LRB RRB 										{$$ = createnode("MethodInvocation",{$1,createnode("DOT, {}"),$3,createnode("LRB, {}"),createnode("RRB, {}")});}
+|	Primary DOT Identifier LRB ArgumentList RRB 										{$$ = createnode("MethodInvocation",{$1,createnode("DOT, {}"),$3,createnode("LRB, {}"),$5,createnode("RRB, {}")});}
+|	SUPER DOT Identifier LRB RRB 										{$$ = createnode("MethodInvocation",{createnode("SUPER, {}"),createnode("DOT, {}"),$3,createnode("LRB, {}"),createnode("RRB, {}")});}
+|	Name DOT SUPER DOT Identifier LRB RRB 										{$$ = createnode("MethodInvocation",{$1,createnode("DOT, {}"),createnode("SUPER, {}"),createnode("DOT, {}"),$5,createnode("LRB, {}"),createnode("RRB, {}")});}
+|	Name DOT SUPER DOT Identifier LRB ArgumentList RRB 										{$$ = createnode("MethodInvocation",{$1,createnode("DOT, {}"),createnode("SUPER, {}"),createnode("DOT, {}"),$5,createnode("LRB, {}"),$7,createnode("RRB, {}")});}
+	;
+
+ArgumentList:
+	Expression 										{$$ = createnode("ArgumentList",{$1});}
+|	ArgumentList COMMA Expression 										{$$ = createnode("ArgumentList",{$1,createnode("COMMA, {}"),$3});}
+	;
+
+ArrayCreationExpression:
+	NEW PrimitiveType DimExprs 										{$$ = createnode("ArrayCreationExpression",{createnode("NEW, {}"),$2,$3});}
+|	NEW PrimitiveType DimExprs Dims 										{$$ = createnode("ArrayCreationExpression",{createnode("NEW, {}"),$2,$3,$4});}
+|	NEW ClassOrInterfaceType DimExprs 										{$$ = createnode("ArrayCreationExpression",{createnode("NEW, {}"),$2,$3});}
+|	NEW ClassOrInterfaceType DimExprs Dims 										{$$ = createnode("ArrayCreationExpression",{createnode("NEW, {}"),$2,$3,$4});}
+|	NEW PrimitiveType Dims ArrayInitializer 										{$$ = createnode("ArrayCreationExpression",{createnode("NEW, {}"),$2,$3,$4});}
+|	NEW ClassOrInterfaceType Dims ArrayInitializer 										{$$ = createnode("ArrayCreationExpression",{createnode("NEW, {}"),$2,$3,$4});}
+	;
+
+DimExprs:
+	DimExprs DimExpr 										{$$ = createnode("DimExprs",{$1,$2});}
+|	DimExpr 										{$$ = createnode("DimExprs",{$1});}
+	;
+
+DimExpr:
+	LSB Expression RSB 										{$$ = createnode("DimExpr",{createnode("LSB, {}"),$2,createnode("RSB, {}")});}
+	;
+
+Dims:
+	LSB RSB 										{$$ = createnode("Dims",{createnode("LSB, {}"),createnode("RSB, {}")});}
+|	Dims LSB RSB 										{$$ = createnode("Dims",{$1,createnode("LSB, {}"),createnode("RSB, {}")});}
+	;
+
+Expression:
+	AssignmentExpression 										{$$ = createnode("Expression",{$1});}
+	;
+
+AssignmentExpression:
+	ConditionalExpression 										{$$ = createnode("AssignmentExpression",{$1});}
+|	Assignment 										{$$ = createnode("AssignmentExpression",{$1});}
+	;
+
+Assignment:
+	LeftHandSide AssignmentOperator Expression 										{$$ = createnode("Assignment",{$1,$2,$3});}
+	;
+
+LeftHandSide:
+	Name 										{$$ = createnode("LeftHandSide",{$1});}
+|	FieldAccess 										{$$ = createnode("LeftHandSide",{$1});}
+|	ArrayAccess 										{$$ = createnode("LeftHandSide",{$1});}
+	;
+
+AssignmentOperator:
+	ALTO 										{$$ = createnode("AssignmentOperator",{$1});}
+|	USET 										{$$ = createnode("AssignmentOperator",{$1});}
+|	NUSET 										{$$ = createnode("AssignmentOperator",{$1});}
+|	LTET 										{$$ = createnode("AssignmentOperator",{$1});}
+|	VET 										{$$ = createnode("AssignmentOperator",{$1});}
+|	DET 										{$$ = createnode("AssignmentOperator",{$1});}
+	;
+
+ConditionalExpression:
+	ConditionalOrExpression 										{$$ = createnode("ConditionalExpression",{$1});}
+|	ConditionalOrExpression QUEST Expression COLON ConditionalExpression 										{$$ = createnode("ConditionalExpression",{$1,createnode("QUEST, {}"),$3,createnode("COLON, {}"),$5});}
+	;
+
+ConditionalOrExpression:
+	ConditionalAndExpression 										{$$ = createnode("ConditionalOrExpression",{$1});}
+|	ConditionalOrExpression OR ConditionalAndExpression 										{$$ = createnode("ConditionalOrExpression",{$1,createnode("OR, {}"),$3});}
+	;
+
+ConditionalAndExpression:
+	InclusiveOrExpression 										{$$ = createnode("ConditionalAndExpression",{$1});}
+|	ConditionalAndExpression AND InclusiveOrExpression 										{$$ = createnode("ConditionalAndExpression",{$1,createnode("AND, {}"),$3});}
+	;
+
+InclusiveOrExpression:
+	ExclusiveOrExpression 										{$$ = createnode("InclusiveOrExpression",{$1});}
+|	InclusiveOrExpression BITOR ExclusiveOrExpression 										{$$ = createnode("InclusiveOrExpression",{$1,createnode("BITOR, {}"),$3});}
+	;
+
+ExclusiveOrExpression:
+	AndExpression 										{$$ = createnode("ExclusiveOrExpression",{$1});}
+|	ExclusiveOrExpression POW AndExpression 										{$$ = createnode("ExclusiveOrExpression",{$1,createnode("POW, {}"),$3});}
+	;
+
+AndExpression:
+	EqualityExpression 										{$$ = createnode("AndExpression",{$1});}
+|	AndExpression BITAND EqualityExpression 										{$$ = createnode("AndExpression",{$1,createnode("BITAND, {}"),$3});}
+	;
+
+EqualityExpression:
+	RelationalExpression 										{$$ = createnode("EqualityExpression",{$1});}
+|	EqualityExpression EQ RelationalExpression 										{$$ = createnode("EqualityExpression",{$1,createnode("EQ, {}"),$3});}
+|	EqualityExpression NEQ RelationalExpression 										{$$ = createnode("EqualityExpression",{$1,createnode("NEQ, {}"),$3});}
+	;
+
+RelationalExpression:
+	ShiftExpression 										{$$ = createnode("RelationalExpression",{$1});}
+|	RelationalExpression LT ShiftExpression 										{$$ = createnode("RelationalExpression",{$1,createnode("LT, {}"),$3});}
+|	RelationalExpression GT ShiftExpression 										{$$ = createnode("RelationalExpression",{$1,createnode("GT, {}"),$3});}
+|	RelationalExpression LEQ ShiftExpression 										{$$ = createnode("RelationalExpression",{$1,createnode("LEQ, {}"),$3});}
+|	RelationalExpression GEQ ShiftExpression 										{$$ = createnode("RelationalExpression",{$1,createnode("GEQ, {}"),$3});}
+|	InstanceofExpression 										{$$ = createnode("RelationalExpression",{$1});}
+	;
+
+InstanceofExpression:
+	RelationalExpression INSTANCEOF ReferenceType 										{$$ = createnode("InstanceofExpression",{$1,createnode("INSTANCEOF, {}"),$3});}
+	;
+
+ShiftExpression:
+	AdditiveExpression 										{$$ = createnode("ShiftExpression",{$1});}
+|	ShiftExpression LEFTSHIFT AdditiveExpression 										{$$ = createnode("ShiftExpression",{$1,createnode("LEFTSHIFT, {}"),$3});}
+|	ShiftExpression RIGHTSHIFT AdditiveExpression 										{$$ = createnode("ShiftExpression",{$1,createnode("RIGHTSHIFT, {}"),$3});}
+|	ShiftExpression THREEGREAT AdditiveExpression 										{$$ = createnode("ShiftExpression",{$1,createnode("THREEGREAT, {}"),$3});}
+	;
+
+AdditiveExpression:
+	MultiplicativeExpression 										{$$ = createnode("AdditiveExpression",{$1});}
+|	AdditiveExpression PLUS MultiplicativeExpression 										{$$ = createnode("AdditiveExpression",{$1,createnode("PLUS, {}"),$3});}
+|	AdditiveExpression MINUS MultiplicativeExpression 										{$$ = createnode("AdditiveExpression",{$1,createnode("MINUS, {}"),$3});}
+	;
+
+MultiplicativeExpression:
+	UnaryExpression 										{$$ = createnode("MultiplicativeExpression",{$1});}
+|	MultiplicativeExpression MULT UnaryExpression 										{$$ = createnode("MultiplicativeExpression",{$1,createnode("MULT, {}"),$3});}
+|	MultiplicativeExpression DIVIDE UnaryExpression 										{$$ = createnode("MultiplicativeExpression",{$1,createnode("DIVIDE, {}"),$3});}
+|	MultiplicativeExpression MODULO UnaryExpression 										{$$ = createnode("MultiplicativeExpression",{$1,createnode("MODULO, {}"),$3});}
+	;
+
+UnaryExpression:
+	PreIncrementExpression 										{$$ = createnode("UnaryExpression",{$1});}
+|	PreDecrementExpression 										{$$ = createnode("UnaryExpression",{$1});}
+|	PLUS UnaryExpression 										{$$ = createnode("UnaryExpression",{createnode("PLUS, {}"),$2});}
+|	MINUS UnaryExpression 										{$$ = createnode("UnaryExpression",{createnode("MINUS, {}"),$2});}
+|	UnaryExpressionNotPlusMinus 										{$$ = createnode("UnaryExpression",{$1});}
+	;
+
+PreIncrementExpression:
+	INCREMENT UnaryExpression 										{$$ = createnode("PreIncrementExpression",{createnode("INCREMENT, {}"),$2});}
+	;
+
+PreDecrementExpression:
+	DECREMENT UnaryExpression 										{$$ = createnode("PreDecrementExpression",{createnode("DECREMENT, {}"),$2});}
+	;
+
+UnaryExpressionNotPlusMinus:
+	PostfixExpression 										{$$ = createnode("UnaryExpressionNotPlusMinus",{$1});}
+|	TILDE UnaryExpression 										{$$ = createnode("UnaryExpressionNotPlusMinus",{createnode("TILDE, {}"),$2});}
+|	NOT UnaryExpression 										{$$ = createnode("UnaryExpressionNotPlusMinus",{createnode("NOT, {}"),$2});}
+|	CastExpression 										{$$ = createnode("UnaryExpressionNotPlusMinus",{$1});}
+|	SwitchExpression 										{$$ = createnode("UnaryExpressionNotPlusMinus",{$1});}
+	;
+
+PostfixExpression:
+	Primary 										{$$ = createnode("PostfixExpression",{$1});}
+|	PostIncrementExpression 										{$$ = createnode("PostfixExpression",{$1});}
+	;
+
+PostIncrementExpression:
+	PostfixExpression INCREMENT 										{$$ = createnode("PostIncrementExpression",{$1,createnode("INCREMENT, {}")});}
+|	PostfixExpression DECREMENT 										{$$ = createnode("PostIncrementExpression",{$1,createnode("DECREMENT, {}")});}
+	;
+
+CastExpression:
+	LSB PrimitiveType RSB UnaryExpression 										{$$ = createnode("CastExpression",{createnode("LSB, {}"),$2,createnode("RSB, {}"),$4});}
+|	LSB ReferenceType RSB UnaryExpressionNotPlusMinus 										{$$ = createnode("CastExpression",{createnode("LSB, {}"),$2,createnode("RSB, {}"),$4});}
+	;
+
+SwitchExpression:
+	SWITCH LSB Expression RSB SwitchBlock 										{$$ = createnode("SwitchExpression",{createnode("SWITCH, {}"),createnode("LSB, {}"),$3,createnode("RSB, {}"),$5});}
+	;
+

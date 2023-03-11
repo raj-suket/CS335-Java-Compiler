@@ -158,8 +158,7 @@ vector<Node *> vec;
 %type<str_val> ClassExtends
 %type<str_val> ClassInstanceCreationExpression
 %type<str_val> ClassMemberDeclaration
-%type<str_val> ClassOrInterfaceType
-%type<str_val> ClassType
+
 %type<str_val> ClassTypeList
 %type<str_val> CompilationUnit
 %type<str_val> ConditionalAndExpression
@@ -299,7 +298,6 @@ Names:
 
 CompilationUnit:
 	OrdinaryCompilationUnit 										{vec = {$1}; root = createnode("CompilationUnit", vec);}
-|	ModularCompilationUnit 										{vec = {$1}; root = createnode("CompilationUnit", vec);}
 	;
 
 OrdinaryCompilationUnit:
@@ -313,10 +311,6 @@ TopLevelClassOrInterfaceDeclarations:
 |	TopLevelClassOrInterfaceDeclarations TopLevelClassOrInterfaceDeclaration 										{vec = {$1,$2}; $$ = createnode("TopLevelClassOrInterfaceDeclarations", vec);}
 	;
 
-ModularCompilationUnit:
-	ModuleDeclaration 										{vec = {$1}; $$ = createnode("ModularCompilationUnit", vec);}
-	;
-
 PackageDeclaration:
 	PACKAGE Name SEMICOLON 										{vec = {createnode("PACKAGE__" + *$1 , emp),$2,createnode("SEMICOLON__" + *$3 , emp)}; $$ = createnode("PackageDeclaration", vec);}
 	;
@@ -324,37 +318,6 @@ PackageDeclaration:
 TopLevelClassOrInterfaceDeclaration:
 	ClassDeclaration 										{vec = {$1}; $$ = createnode("TopLevelClassOrInterfaceDeclaration", vec);}
 |	SEMICOLON 										{vec = {createnode("SEMICOLON__" + *$1 , emp)}; $$ = createnode("TopLevelClassOrInterfaceDeclaration", vec);}
-	;
-
-ModuleDeclaration:
-	MODULE Name LCB ModuleDirectives RCB 										{vec = {createnode("MODULE__" + *$1 , emp),$2,createnode("LCB__" + *$3 , emp),$4,createnode("RCB__" + *$5 , emp)}; $$ = createnode("ModuleDeclaration", vec);}
-|	MODULE Name LCB RCB 										{vec = {createnode("MODULE__" + *$1 , emp),$2,createnode("LCB__" + *$3 , emp),createnode("RCB__" + *$4 , emp)}; $$ = createnode("ModuleDeclaration", vec);}
-	;
-
-ModuleDirectives:
-	ModuleDirective 										{vec = {$1}; $$ = createnode("ModuleDirectives", vec);}
-|	ModuleDirectives ModuleDirective 										{vec = {$1,$2}; $$ = createnode("ModuleDirectives", vec);}
-	;
-
-ModuleDirective:
-	REQUIRES RequiresModifiers Name SEMICOLON 										{vec = {createnode("REQUIRES__" + *$1 , emp),$2,$3,createnode("SEMICOLON__" + *$4 , emp)}; $$ = createnode("ModuleDirective", vec);}
-|	REQUIRES Name SEMICOLON 										{vec = {createnode("REQUIRES__" + *$1 , emp),$2,createnode("SEMICOLON__" + *$3 , emp)}; $$ = createnode("ModuleDirective", vec);}
-|	EXPORTS Name TO Names SEMICOLON 										{vec = {createnode("EXPORTS__" + *$1 , emp),$2,createnode("TO__" + *$3 , emp),$4,createnode("SEMICOLON__" + *$5 , emp)}; $$ = createnode("ModuleDirective", vec);}
-|	EXPORTS Name SEMICOLON 										{vec = {createnode("EXPORTS__" + *$1 , emp),$2,createnode("SEMICOLON__" + *$3 , emp)}; $$ = createnode("ModuleDirective", vec);}
-|	OPENS Name SEMICOLON 										{vec = {createnode("OPENS__" + *$1 , emp),$2,createnode("SEMICOLON__" + *$3 , emp)}; $$ = createnode("ModuleDirective", vec);}
-|	OPENS Name TO Names SEMICOLON 										{vec = {createnode("OPENS__" + *$1 , emp),$2,createnode("TO__" + *$3 , emp),$4,createnode("SEMICOLON__" + *$5 , emp)}; $$ = createnode("ModuleDirective", vec);}
-|	USES Name SEMICOLON 										{vec = {createnode("USES__" + *$1 , emp),$2,createnode("SEMICOLON__" + *$3 , emp)}; $$ = createnode("ModuleDirective", vec);}
-|	PROVIDES Name WITH Names SEMICOLON 										{vec = {createnode("PROVIDES__" + *$1 , emp),$2,createnode("WITH__" + *$3 , emp),$4,createnode("SEMICOLON__" + *$5 , emp)}; $$ = createnode("ModuleDirective", vec);}
-	;
-
-RequiresModifiers:
-	RequiresModifier 										{vec = {$1}; $$ = createnode("RequiresModifiers", vec);}
-|	RequiresModifiers RequiresModifier 										{vec = {$1,$2}; $$ = createnode("RequiresModifiers", vec);}
-	;
-
-RequiresModifier:
-	TRANSITIVE 										{vec = {createnode("TRANSITIVE__" + *$1 , emp)}; $$ = createnode("RequiresModifier", vec);}
-|	STATIC 										{vec = {createnode("STATIC__" + *$1 , emp)}; $$ = createnode("RequiresModifier", vec);}
 	;
 
 Type:
@@ -369,21 +332,13 @@ PrimitiveType:
 	;
 
 ReferenceType:
-	ClassOrInterfaceType 										{vec = {$1}; $$ = createnode("ReferenceType", vec);}
+	Name									{vec = {$1}; $$ = createnode("ReferenceType", vec);}
 |	ArrayType 										{vec = {$1}; $$ = createnode("ReferenceType", vec);}
 	;
 
 ArrayType:
 	PrimitiveType Dims 										{vec = {$1,$2}; $$ = createnode("ArrayType", vec);}
-|	ClassOrInterfaceType Dims 										{vec = {$1,$2}; $$ = createnode("ArrayType", vec);}
-	;
-
-ClassOrInterfaceType:
-	ClassType 										{vec = {$1}; $$ = createnode("ClassOrInterfaceType", vec);}
-	;
-
-ClassType:
-	Name 										{vec = {$1}; $$ = createnode("ClassType", vec);}
+|	Name Dims 										{vec = {$1,$2}; $$ = createnode("ArrayType", vec);}
 	;
 
 ClassDeclaration:
@@ -412,7 +367,7 @@ Modifier:
 	;
 
 ClassExtends:
-	EXTENDS ClassType 										{vec = {createnode("EXTENDS__" + *$1 , emp),$2}; $$ = createnode("ClassExtends", vec);}
+	EXTENDS Name										{vec = {createnode("EXTENDS__" + *$1 , emp),$2}; $$ = createnode("ClassExtends", vec);}
 	;
 
 ClassBody:
@@ -468,12 +423,8 @@ MethodDeclaration:
 	;
 
 MethodHeader:
-	Modifiers Type MethodDeclarator Throws 										{vec = {$1,$2,$3,$4}; $$ = createnode("MethodHeader", vec);}
-|	Type MethodDeclarator Throws 										{vec = {$1,$2,$3}; $$ = createnode("MethodHeader", vec);}
-|	Modifiers Type MethodDeclarator 										{vec = {$1,$2,$3}; $$ = createnode("MethodHeader", vec);}
+	Modifiers Type MethodDeclarator 										{vec = {$1,$2,$3}; $$ = createnode("MethodHeader", vec);}
 |	Type MethodDeclarator 										{vec = {$1,$2}; $$ = createnode("MethodHeader", vec);}
-|	Modifiers VOID MethodDeclarator Throws 										{vec = {$1,createnode("VOID__" + *$2 , emp),$3,$4}; $$ = createnode("MethodHeader", vec);}
-|	VOID MethodDeclarator Throws 										{vec = {createnode("VOID__" + *$1 , emp),$2,$3}; $$ = createnode("MethodHeader", vec);}
 |	Modifiers VOID MethodDeclarator 										{vec = {$1,createnode("VOID__" + *$2 , emp),$3}; $$ = createnode("MethodHeader", vec);}
 |	VOID MethodDeclarator 										{vec = {createnode("VOID__" + *$1 , emp),$2}; $$ = createnode("MethodHeader", vec);}
 	;
@@ -481,7 +432,6 @@ MethodHeader:
 MethodDeclarator:
 	Identifier LRB FormalParameterList RRB 										{vec = {$1,createnode("LRB__" + *$2 , emp),$3,createnode("RRB__" + *$4 , emp)}; $$ = createnode("MethodDeclarator", vec);}
 |	Identifier LRB RRB 										{vec = {$1,createnode("LRB__" + *$2 , emp),createnode("RRB__" + *$3 , emp)}; $$ = createnode("MethodDeclarator", vec);}
-|	MethodDeclarator LSB RSB 										{vec = {$1,createnode("LSB__" + *$2 , emp),createnode("RSB__" + *$3 , emp)}; $$ = createnode("MethodDeclarator", vec);}
 	;
 
 FormalParameterList:
@@ -491,16 +441,6 @@ FormalParameterList:
 
 FormalParameter:
 	Type VariableDeclaratorId 										{vec = {$1,$2}; $$ = createnode("FormalParameter", vec);}
-|	Modifiers Type VariableDeclaratorId 										{vec = {$1,$2,$3}; $$ = createnode("FormalParameter", vec);}
-	;
-
-Throws:
-	THROWS ClassTypeList 										{vec = {createnode("THROWS__" + *$1 , emp),$2}; $$ = createnode("Throws", vec);}
-	;
-
-ClassTypeList:
-	ClassType 										{vec = {$1}; $$ = createnode("ClassTypeList", vec);}
-|	ClassTypeList COMMA ClassType 										{vec = {$1,createnode("COMMA__" + *$2 , emp),$3}; $$ = createnode("ClassTypeList", vec);}
 	;
 
 MethodBody:
@@ -517,9 +457,7 @@ StaticInitializer:
 	;
 
 ConstructorDeclaration:
-	Modifiers ConstructorDeclarator Throws ConstructorBody 										{vec = {$1,$2,$3,$4}; $$ = createnode("ConstructorDeclaration", vec);}
-|	ConstructorDeclarator Throws ConstructorBody 										{vec = {$1,$2,$3}; $$ = createnode("ConstructorDeclaration", vec);}
-|	Modifiers ConstructorDeclarator ConstructorBody 										{vec = {$1,$2,$3}; $$ = createnode("ConstructorDeclaration", vec);}
+	Modifiers ConstructorDeclarator ConstructorBody 										{vec = {$1,$2,$3}; $$ = createnode("ConstructorDeclaration", vec);}
 |	ConstructorDeclarator ConstructorBody 										{vec = {$1,$2}; $$ = createnode("ConstructorDeclaration", vec);}
 	;
 
@@ -586,7 +524,6 @@ LocalVariableDeclaration:
 
 Statement:
 	StatementWithoutTrailingSubstatement 										{vec = {$1}; $$ = createnode("Statement", vec);}
-|	LabeledStatement 										{vec = {$1}; $$ = createnode("Statement", vec);}
 |	IfThenStatement 										{vec = {$1}; $$ = createnode("Statement", vec);}
 |	IfThenElseStatement 										{vec = {$1}; $$ = createnode("Statement", vec);}
 |	WhileStatement 										{vec = {$1}; $$ = createnode("Statement", vec);}
@@ -606,14 +543,9 @@ StatementWithoutTrailingSubstatement:
 |	EmptyStatement 										{vec = {$1}; $$ = createnode("StatementWithoutTrailingSubstatement", vec);}
 |	ExpressionStatement 										{vec = {$1}; $$ = createnode("StatementWithoutTrailingSubstatement", vec);}
 |	AssertStatement 										{vec = {$1}; $$ = createnode("StatementWithoutTrailingSubstatement", vec);}
-|	SwitchStatement 										{vec = {$1}; $$ = createnode("StatementWithoutTrailingSubstatement", vec);}
-|	DoStatement 										{vec = {$1}; $$ = createnode("StatementWithoutTrailingSubstatement", vec);}
 |	BreakStatement 										{vec = {$1}; $$ = createnode("StatementWithoutTrailingSubstatement", vec);}
 |	ContinueStatement 										{vec = {$1}; $$ = createnode("StatementWithoutTrailingSubstatement", vec);}
 |	ReturnStatement 										{vec = {$1}; $$ = createnode("StatementWithoutTrailingSubstatement", vec);}
-|	SynchronizedStatement 										{vec = {$1}; $$ = createnode("StatementWithoutTrailingSubstatement", vec);}
-|	ThrowStatement 										{vec = {$1}; $$ = createnode("StatementWithoutTrailingSubstatement", vec);}
-|	TryStatement 										{vec = {$1}; $$ = createnode("StatementWithoutTrailingSubstatement", vec);}
 	;
 
 AssertStatement:
@@ -623,14 +555,6 @@ AssertStatement:
 
 EmptyStatement:
 	SEMICOLON 										{vec = {createnode("SEMICOLON__" + *$1 , emp)}; $$ = createnode("EmptyStatement", vec);}
-	;
-
-LabeledStatement:
-	Identifier COLON Statement 										{vec = {$1,createnode("COLON__" + *$2 , emp),$3}; $$ = createnode("LabeledStatement", vec);}
-	;
-
-LabeledStatementNoShortIf:
-	Identifier COLON StatementNoShortIf 										{vec = {$1,createnode("COLON__" + *$2 , emp),$3}; $$ = createnode("LabeledStatementNoShortIf", vec);}
 	;
 
 ExpressionStatement:
@@ -659,51 +583,12 @@ IfThenElseStatementNoShortIf:
 	IF LRB Expression RRB StatementNoShortIf ELSE StatementNoShortIf 										{vec = {createnode("IF__" + *$1 , emp),createnode("LRB__" + *$2 , emp),$3,createnode("RRB__" + *$4 , emp),$5,createnode("ELSE__" + *$6 , emp),$7}; $$ = createnode("IfThenElseStatementNoShortIf", vec);}
 	;
 
-SwitchStatement:
-	SWITCH LRB Expression RRB SwitchBlock 										{vec = {createnode("SWITCH__" + *$1 , emp),createnode("LRB__" + *$2 , emp),$3,createnode("RRB__" + *$4 , emp),$5}; $$ = createnode("SwitchStatement", vec);}
-	;
-
-SwitchBlock:
-	LCB SwitchBlockStatementGroups SwitchLabels RCB 										{vec = {createnode("LCB__" + *$1 , emp),$2,$3,createnode("RCB__" + *$4 , emp)}; $$ = createnode("SwitchBlock", vec);}
-|	LCB SwitchLabels RCB 										{vec = {createnode("LCB__" + *$1 , emp),$2,createnode("RCB__" + *$3 , emp)}; $$ = createnode("SwitchBlock", vec);}
-|	LCB SwitchBlockStatementGroups RCB 										{vec = {createnode("LCB__" + *$1 , emp),$2,createnode("RCB__" + *$3 , emp)}; $$ = createnode("SwitchBlock", vec);}
-|	LCB RCB 										{vec = {createnode("LCB__" + *$1 , emp),createnode("RCB__" + *$2 , emp)}; $$ = createnode("SwitchBlock", vec);}
-	;
-
-SwitchBlockStatementGroups:
-	SwitchBlockStatementGroup 										{vec = {$1}; $$ = createnode("SwitchBlockStatementGroups", vec);}
-|	SwitchBlockStatementGroups SwitchBlockStatementGroup 										{vec = {$1,$2}; $$ = createnode("SwitchBlockStatementGroups", vec);}
-	;
-
-SwitchLabels:
-	SwitchLabel 										{vec = {$1}; $$ = createnode("SwitchLabels", vec);}
-|	SwitchLabels SwitchLabel 										{vec = {$1,$2}; $$ = createnode("SwitchLabels", vec);}
-	;
-
-SwitchBlockStatementGroup:
-	SwitchLabels BlockStatements 										{vec = {$1,$2}; $$ = createnode("SwitchBlockStatementGroup", vec);}
-	;
-
-SwitchLabel:
-	CASE CaseConstants COLON 										{vec = {createnode("CASE__" + *$1 , emp),$2,createnode("COLON__" + *$3 , emp)}; $$ = createnode("SwitchLabel", vec);}
-|	DEFAULT COLON 										{vec = {createnode("DEFAULT__" + *$1 , emp),createnode("COLON__" + *$2 , emp)}; $$ = createnode("SwitchLabel", vec);}
-	;
-
-CaseConstants:
-	ConditionalExpression 										{vec = {$1}; $$ = createnode("CaseConstants", vec);}
-|	CaseConstants COMMA ConditionalExpression 										{vec = {$1,createnode("COMMA__" + *$2 , emp),$3}; $$ = createnode("CaseConstants", vec);}
-	;
-
 WhileStatement:
 	WHILE LRB Expression RRB Statement 										{vec = {createnode("WHILE__" + *$1 , emp),createnode("LRB__" + *$2 , emp),$3,createnode("RRB__" + *$4 , emp),$5}; $$ = createnode("WhileStatement", vec);}
 	;
 
 WhileStatementNoShortIf:
 	WHILE LRB Expression RRB StatementNoShortIf 										{vec = {createnode("WHILE__" + *$1 , emp),createnode("LRB__" + *$2 , emp),$3,createnode("RRB__" + *$4 , emp),$5}; $$ = createnode("WhileStatementNoShortIf", vec);}
-	;
-
-DoStatement:
-	DO Statement WHILE LRB Expression RRB SEMICOLON 										{vec = {createnode("DO__" + *$1 , emp),$2,createnode("WHILE__" + *$3 , emp),createnode("LRB__" + *$4 , emp),$5,createnode("RRB__" + *$6 , emp),createnode("SEMICOLON__" + *$7 , emp)}; $$ = createnode("DoStatement", vec);}
 	;
 
 ForStatement:
@@ -775,44 +660,6 @@ ReturnStatement:
 |	RETURN Expression SEMICOLON 										{vec = {createnode("RETURN__" + *$1 , emp),$2,createnode("SEMICOLON__" + *$3 , emp)}; $$ = createnode("ReturnStatement", vec);}
 	;
 
-ThrowStatement:
-	THROW Expression SEMICOLON 										{vec = {createnode("THROW__" + *$1 , emp),$2,createnode("SEMICOLON__" + *$3 , emp)}; $$ = createnode("ThrowStatement", vec);}
-	;
-
-SynchronizedStatement:
-	SYNCHRONIZED LRB Expression RRB Block 										{vec = {createnode("SYNCHRONIZED__" + *$1 , emp),createnode("LRB__" + *$2 , emp),$3,createnode("RRB__" + *$4 , emp),$5}; $$ = createnode("SynchronizedStatement", vec);}
-	;
-
-TryStatement:
-	TRY Block Catches 										{vec = {createnode("TRY__" + *$1 , emp),$2,$3}; $$ = createnode("TryStatement", vec);}
-|	TRY Block Finally 										{vec = {createnode("TRY__" + *$1 , emp),$2,$3}; $$ = createnode("TryStatement", vec);}
-|	TRY Block Catches Finally 										{vec = {createnode("TRY__" + *$1 , emp),$2,$3,$4}; $$ = createnode("TryStatement", vec);}
-	;
-
-Catches:
-	Catches CatchClause 										{vec = {$1,$2}; $$ = createnode("Catches", vec);}
-|	CatchClause 										{vec = {$1}; $$ = createnode("Catches", vec);}
-	;
-
-CatchClause:
-	CATCH LRB CatchType VariableDeclaratorId RRB Block 										{vec = {createnode("CATCH__" + *$1 , emp),createnode("LRB__" + *$2 , emp),$3,$4,createnode("RRB__" + *$5 , emp),$6}; $$ = createnode("CatchClause", vec);}
-|	CATCH LRB Modifiers CatchType VariableDeclaratorId RRB Block 										{vec = {createnode("CATCH__" + *$1 , emp),createnode("LRB__" + *$2 , emp),$3,$4,$5,createnode("RRB__" + *$6 , emp),$7}; $$ = createnode("CatchClause", vec);}
-	;
-
-CatchType:
-	Name 										{vec = {$1}; $$ = createnode("CatchType", vec);}
-|	Name CatchTypes 										{vec = {$1,$2}; $$ = createnode("CatchType", vec);}
-	;
-
-CatchTypes:
-	BITOR ClassType 										{vec = {createnode("BITOR__" + *$1 , emp),$2}; $$ = createnode("CatchTypes", vec);}
-|	CatchTypes BITOR CatchType 										{vec = {$1,createnode("BITOR__" + *$2 , emp),$3}; $$ = createnode("CatchTypes", vec);}
-	;
-
-Finally:
-	FINALLY Block 										{vec = {createnode("FINALLY__" + *$1 , emp),$2}; $$ = createnode("Finally", vec);}
-	;
-
 Primary:
 	PrimaryNoNewArray 										{vec = {$1}; $$ = createnode("Primary", vec);}
 |	ArrayCreationExpression 										{vec = {$1}; $$ = createnode("Primary", vec);}
@@ -836,15 +683,14 @@ ClassInstanceCreationExpression:
 	;
 
 UnqualifiedClassInstanceCreationExpression:
-	NEW ClassOrInterfaceType LRB ArgumentList RRB 										{vec = {createnode("NEW__" + *$1 , emp),$2,createnode("LRB__" + *$3 , emp),$4,createnode("RRB__" + *$5 , emp)}; $$ = createnode("UnqualifiedClassInstanceCreationExpression", vec);}
-|	NEW ClassOrInterfaceType LRB RRB ClassBody 										{vec = {createnode("NEW__" + *$1 , emp),$2,createnode("LRB__" + *$3 , emp),createnode("RRB__" + *$4 , emp),$5}; $$ = createnode("UnqualifiedClassInstanceCreationExpression", vec);}
-|	NEW ClassOrInterfaceType LRB ArgumentList RRB ClassBody 										{vec = {createnode("NEW__" + *$1 , emp),$2,createnode("LRB__" + *$3 , emp),$4,createnode("RRB__" + *$5 , emp),$6}; $$ = createnode("UnqualifiedClassInstanceCreationExpression", vec);}
-|	NEW ClassOrInterfaceType LRB RRB 										{vec = {createnode("NEW__" + *$1 , emp),$2,createnode("LRB__" + *$3 , emp),createnode("RRB__" + *$4 , emp)}; $$ = createnode("UnqualifiedClassInstanceCreationExpression", vec);}
+	NEW Name LRB ArgumentList RRB 										{vec = {createnode("NEW__" + *$1 , emp),$2,createnode("LRB__" + *$3 , emp),$4,createnode("RRB__" + *$5 , emp)}; $$ = createnode("UnqualifiedClassInstanceCreationExpression", vec);}
+|	NEW Name LRB RRB ClassBody 										{vec = {createnode("NEW__" + *$1 , emp),$2,createnode("LRB__" + *$3 , emp),createnode("RRB__" + *$4 , emp),$5}; $$ = createnode("UnqualifiedClassInstanceCreationExpression", vec);}
+|	NEW Name LRB ArgumentList RRB ClassBody 										{vec = {createnode("NEW__" + *$1 , emp),$2,createnode("LRB__" + *$3 , emp),$4,createnode("RRB__" + *$5 , emp),$6}; $$ = createnode("UnqualifiedClassInstanceCreationExpression", vec);}
+|	NEW Name LRB RRB 										{vec = {createnode("NEW__" + *$1 , emp),$2,createnode("LRB__" + *$3 , emp),createnode("RRB__" + *$4 , emp)}; $$ = createnode("UnqualifiedClassInstanceCreationExpression", vec);}
 	;
 
 FieldAccess:
 	Primary DOT Identifier 										{vec = {$1,createnode("DOT__" + *$2 , emp),$3}; $$ = createnode("FieldAccess", vec);}
-|	SUPER DOT Identifier 										{vec = {createnode("SUPER__" + *$1 , emp),createnode("DOT__" + *$2 , emp),$3}; $$ = createnode("FieldAccess", vec);}
 |	Name DOT Identifier 										{vec = {$1,createnode("DOT__" + *$2 , emp),$3}; $$ = createnode("FieldAccess", vec);}
 	;
 
@@ -854,14 +700,10 @@ ArrayAccess:
 	;
 
 MethodInvocation:
-	Name LRB RSB 										{vec = {$1,createnode("LRB__" + *$2 , emp),createnode("RSB__" + *$3 , emp)}; $$ = createnode("MethodInvocation", vec);}
+	Name LRB RRB 										{vec = {$1,createnode("LRB__" + *$2 , emp),createnode("RSB__" + *$3 , emp)}; $$ = createnode("MethodInvocation", vec);}
 |	Name LRB ArgumentList RRB 										{vec = {$1,createnode("LRB__" + *$2 , emp),$3,createnode("RRB__" + *$4 , emp)}; $$ = createnode("MethodInvocation", vec);}
 |	Primary DOT Identifier LRB RRB 										{vec = {$1,createnode("DOT__" + *$2 , emp),$3,createnode("LRB__" + *$4 , emp),createnode("RRB__" + *$5 , emp)}; $$ = createnode("MethodInvocation", vec);}
 |	Primary DOT Identifier LRB ArgumentList RRB 										{vec = {$1,createnode("DOT__" + *$2 , emp),$3,createnode("LRB__" + *$4 , emp),$5,createnode("RRB__" + *$6 , emp)}; $$ = createnode("MethodInvocation", vec);}
-|	SUPER DOT Identifier LRB RRB 										{vec = {createnode("SUPER__" + *$1 , emp),createnode("DOT__" + *$2 , emp),$3,createnode("LRB__" + *$4 , emp),createnode("RRB__" + *$5 , emp)}; $$ = createnode("MethodInvocation", vec);}
-|	SUPER DOT Identifier LRB ArgumentList RRB 										{vec = {createnode("SUPER__" + *$1 , emp),createnode("DOT__" + *$2 , emp),$3,createnode("LRB__" + *$4 , emp),$5,createnode("RRB__" + *$6 , emp)}; $$ = createnode("MethodInvocation", vec);}
-|	Name DOT SUPER DOT Identifier LRB RRB 										{vec = {$1,createnode("DOT__" + *$2 , emp),createnode("SUPER__" + *$3 , emp),createnode("DOT__" + *$4 , emp),$5,createnode("LRB__" + *$6 , emp),createnode("RRB__" + *$7 , emp)}; $$ = createnode("MethodInvocation", vec);}
-|	Name DOT SUPER DOT Identifier LRB ArgumentList RRB 										{vec = {$1,createnode("DOT__" + *$2 , emp),createnode("SUPER__" + *$3 , emp),createnode("DOT__" + *$4 , emp),$5,createnode("LRB__" + *$6 , emp),$7,createnode("RRB__" + *$8 , emp)}; $$ = createnode("MethodInvocation", vec);}
 	;
 
 ArgumentList:
@@ -872,10 +714,10 @@ ArgumentList:
 ArrayCreationExpression:
 	NEW PrimitiveType DimExprs 										{vec = {createnode("NEW__" + *$1 , emp),$2,$3}; $$ = createnode("ArrayCreationExpression", vec);}
 |	NEW PrimitiveType DimExprs Dims 										{vec = {createnode("NEW__" + *$1 , emp),$2,$3,$4}; $$ = createnode("ArrayCreationExpression", vec);}
-|	NEW ClassOrInterfaceType DimExprs 										{vec = {createnode("NEW__" + *$1 , emp),$2,$3}; $$ = createnode("ArrayCreationExpression", vec);}
-|	NEW ClassOrInterfaceType DimExprs Dims 										{vec = {createnode("NEW__" + *$1 , emp),$2,$3,$4}; $$ = createnode("ArrayCreationExpression", vec);}
+|	NEW Name DimExprs 										{vec = {createnode("NEW__" + *$1 , emp),$2,$3}; $$ = createnode("ArrayCreationExpression", vec);}
+|	NEW Name DimExprs Dims 										{vec = {createnode("NEW__" + *$1 , emp),$2,$3,$4}; $$ = createnode("ArrayCreationExpression", vec);}
 |	NEW PrimitiveType Dims ArrayInitializer 										{vec = {createnode("NEW__" + *$1 , emp),$2,$3,$4}; $$ = createnode("ArrayCreationExpression", vec);}
-|	NEW ClassOrInterfaceType Dims ArrayInitializer 										{vec = {createnode("NEW__" + *$1 , emp),$2,$3,$4}; $$ = createnode("ArrayCreationExpression", vec);}
+|	NEW Name Dims ArrayInitializer 										{vec = {createnode("NEW__" + *$1 , emp),$2,$3,$4}; $$ = createnode("ArrayCreationExpression", vec);}
 	;
 
 DimExprs:
@@ -966,11 +808,6 @@ RelationalExpression:
 |	RelationalExpression GT ShiftExpression 										{vec = {$1,createnode("GT__" + *$2 , emp),$3}; $$ = createnode("RelationalExpression", vec);}
 |	RelationalExpression LEQ ShiftExpression 										{vec = {$1,createnode("LEQ__" + *$2 , emp),$3}; $$ = createnode("RelationalExpression", vec);}
 |	RelationalExpression GEQ ShiftExpression 										{vec = {$1,createnode("GEQ__" + *$2 , emp),$3}; $$ = createnode("RelationalExpression", vec);}
-|	InstanceofExpression 										{vec = {$1}; $$ = createnode("RelationalExpression", vec);}
-	;
-
-InstanceofExpression:
-	RelationalExpression INSTANCEOF ReferenceType 										{vec = {$1,createnode("INSTANCEOF__" + *$2 , emp),$3}; $$ = createnode("InstanceofExpression", vec);}
 	;
 
 ShiftExpression:
@@ -1013,12 +850,11 @@ UnaryExpressionNotPlusMinus:
 	PostfixExpression 										{vec = {$1}; $$ = createnode("UnaryExpressionNotPlusMinus", vec);}
 |	TILDE UnaryExpression 										{vec = {createnode("TILDE__" + *$1 , emp),$2}; $$ = createnode("UnaryExpressionNotPlusMinus", vec);}
 |	NOT UnaryExpression 										{vec = {createnode("NOT__" + *$1 , emp),$2}; $$ = createnode("UnaryExpressionNotPlusMinus", vec);}
-|	CastExpression 										{vec = {$1}; $$ = createnode("UnaryExpressionNotPlusMinus", vec);}
-|	SwitchExpression 										{vec = {$1}; $$ = createnode("UnaryExpressionNotPlusMinus", vec);}
 	;
 
 PostfixExpression:
 	Primary 										{vec = {$1}; $$ = createnode("PostfixExpression", vec);}
+|   Name                                            {vec = {$1}; $$ = createnode("PostfixExpression", vec);}
 |	PostIncrementExpression 										{vec = {$1}; $$ = createnode("PostfixExpression", vec);}
 |	PostDecrementExpression 										{vec = {$1}; $$ = createnode("PostfixExpression", vec);}
 	;
@@ -1029,15 +865,6 @@ PostIncrementExpression:
 
 PostDecrementExpression:
 	PostfixExpression DECREMENT 										{vec = {$1,createnode("DECREMENT__" + *$2 , emp)}; $$ = createnode("PostDecrementExpression", vec);}
-	;
-
-CastExpression:
-	LSB PrimitiveType RSB UnaryExpression 										{vec = {createnode("LSB__" + *$1 , emp),$2,createnode("RSB__" + *$3 , emp),$4}; $$ = createnode("CastExpression", vec);}
-|	LSB ReferenceType RSB UnaryExpressionNotPlusMinus 										{vec = {createnode("LSB__" + *$1 , emp),$2,createnode("RSB__" + *$3 , emp),$4}; $$ = createnode("CastExpression", vec);}
-	;
-
-SwitchExpression:
-	SWITCH LSB Expression RSB SwitchBlock 										{vec = {createnode("SWITCH__" + *$1 , emp),createnode("LSB__" + *$2 , emp),$3,createnode("RSB__" + *$4 , emp),$5}; $$ = createnode("SwitchExpression", vec);}
 	;
 
 %%
@@ -1107,9 +934,9 @@ bool revise_ast(Node* root, Node* par, int idx){
 }
 
 int main(int argc, char* argv[]){
-	string inp = argv[1];
-	string outp = argv[2];
     try{
+		string inp = argv[1];
+		string outp = argv[2];
         freopen(inp.c_str(), "r", stdin);
         freopen(outp.c_str(), "w", stdout);
         yyparse();

@@ -1,0 +1,1 @@
+not considering the possibility of empty file for a program

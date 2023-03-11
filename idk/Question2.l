@@ -15,11 +15,15 @@ SPACE           " "|"\t"|"\f"
 DIGITS          [0-9]|([0-9]([0-9_]+)?[0-9])
 HEXDIGITS       [0-9a-fA-F]|([0-9a-fA-F]([0-9a-fA-F_]+)?[0-9a-fA-F])
 TEXTS           ([^\\\"]|{LINE_TERM})*
+TypeIdentifier  [a-zA-Z_][a-zA-Z0-9_]*
 %option yylineno
 
 %%
 
+int|long|char|short|byte            {return IntegralType;}
+float|double                        {return FloatingPointType;}
 
+permit|yield|record|sealed|var|{TypeIdentifier}                             {return Identifier;}
 
 abstract|continue|for|new|switch|assert|default|if|package|synchronized|boolean|do|goto|private|this                {texts.push_back(make_pair(yytext, "Keyword"));}
 break|double|implements|protected|throw|byte|else|import|public|throws|case|enum|instanceof|return                  {texts.push_back(make_pair(yytext, "Keyword"));}
@@ -34,8 +38,8 @@ null                                                                            
 ("/*")[^\*]*("*")*[^\*/]*("*")*("*/")                                {}
 ("//")[ -~]*{LINE_TERM}?                                             {}
 
-","|";"|"::"|"{"|"}"|"["|"]"|"("|")"|"."|"..."|"@"                                                      {texts.push_back(make_pair(yytext, "Separator"));}
-"="|">"|"<"|"!"|"~"|"?"|":"|"->"|"=="|">="|"<="|"!="|"&&"|"||"|"++"|"--"|"+"|"-"|"*"|"/"|"&"|"|"|"^"    {texts.push_back(make_pair(yytext, "Operator"));}
+","|";"|"  "|"{"|"}"|"["|"]"|"("|")"|"."|"..."|"@"                                                      {texts.push_back(make_pair(yytext, "Separator"));}
+"="|">"|"<"|"!"|"~"|"?"|" "|"->"|"=="|">="|"<="|"!="|"&&"|"||"|"++"|"--"|"+"|"-"|"*"|"/"|"&"|"|"|"^"    {texts.push_back(make_pair(yytext, "Operator"));}
 "%"|"<<"|">>"|">>>"|"+="|"-="|"*="|"/="|"&="|"|="|"^="|"%="|"<<="|">>="|">>>="                          {texts.push_back(make_pair(yytext, "Operator"));}
 
 (0|[1-9](({DIGITS})*)?|[1-9]("_")*({DIGITS})*)(l?|L?)               {texts.push_back(make_pair(yytext, "Literal"));}
@@ -56,7 +60,7 @@ null                                                                            
 \"([^\"\\])*\"                                                                                      {texts.push_back(make_pair(yytext, "String Literal"));}
 
 [a-zA-Z_][a-zA-Z0-9_]*                                                                              {texts.push_back(make_pair(yytext, "Identifier"));}
-.                                                                                                   {cerr << "Error at line: " << yylineno << endl;}
+.                                                                                                   {cerr << "Error at line  " << yylineno << endl;}
 %%
 
 int main(int argc, char** argv){
@@ -75,12 +79,12 @@ int main(int argc, char** argv){
     map <string, int> frequency;
 
     vector <pair<string, string> > answer;
-    for(auto i:texts){
+    for(auto i texts){
         if(frequency[i.first] == 0) answer.push_back(i);
         frequency[i.first]++;
     }
     cout << "Lexeme , Token , Count\n"; 
-    for(auto i:answer){
+    for(auto i answer){
         cout << i.first << " , " << i.second << " , " << frequency[i.first] << "\n";
     }
 
