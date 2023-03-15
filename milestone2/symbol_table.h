@@ -15,11 +15,11 @@ typedef struct tab_item{
 
     vector<int> lines;
 
-    set<int> scope; 
+    set<vector<int>> scope; 
     int type = -1;
 }tab_item;
 
-static map<string, tab_item> sym_table;
+// extern map<string, tab_item> sym_table;
 
 void insert(string name, int type, int lineno);
 

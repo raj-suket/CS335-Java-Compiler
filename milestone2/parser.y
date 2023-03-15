@@ -14,7 +14,7 @@
 		string val;
 		vector<Node*> children;
 	};
-
+	map<string, tab_item> sym_table;
 	Node* createnode (string  val, vector<Node*>  children){
 		Node * temp = new Node;
 		temp->val = val;
@@ -32,17 +32,20 @@
 	vector<Node *> emp;
 	vector<Node *> vec;
 
+	map<vector<int> , int> counts;
+
 	// boolean to decide whether variable encountered is declared or referenced
 	int to_declare = 0;
 	int type_id = 0;
 
-	int current_scope = 0;
+	vector<int> current_scope = {0};
+	
 	void hide_scope(){
-		current_scope--;
+		current_scope.pop_back();
 	}
 
 	void incr_scope(){
-		current_scope++;
+		current_scope.push_back(counts[current_scope]++);
 	}
 %}
 
@@ -52,7 +55,7 @@
     std::string* lex;
 }
 
-%start CompilationUnit
+%start try1
 
 %token<lex> ABSTRACT
 %token<lex> AND
@@ -145,6 +148,8 @@
 %token<lex> WHILE
 %token<lex> WITH
 
+%type<str_val> try1
+%type<str_val> try2
 %type<str_val> AdditiveExpression
 %type<str_val> AndExpression
 %type<str_val> ArgumentList
@@ -285,26 +290,26 @@
 %type<str_val> WhileStatementNoShortIf
 
 %%
+try1: try2											{vec = {$1}; root = createnode("try1", vec);}
+
+try2: Identifier {to_declare = 1;} Identifier {to_declare = 0;} Identifier {incr_scope();} try2 		{hide_scope(); vec = {$1, $3, $5, $7}; $$ = createnode("try2", vec);}
+|	Identifier {to_declare = 1;} Identifier {to_declare = 0;} Identifier			{cout << "HIIITHISTHI\n\n";cout << ($1)->val << "HUEHUE\n";vec = {$1, $3, $5};  $$ = createnode("try2", vec);}	
+	;
 Identifier:
 	IDENTIFIER 										{
-		// cout << "HI\n";
+		cout << "HIInIdentifer\n";
+		cout << (*$1) << " this is identifier val\n";
 		// tab_item* t = lookup((*$1));
-		// if(to_declare){
-			
-		// 	insert((*$1), 0, 0);
+		if(to_declare){
+			cout << "found this to declare\n";
+			tab_item* t = new tab_item;
+			t->lines.push_back(yylineno);
+			t->scope.insert(current_scope);
 
-		// 	t->scope.insert(current_scope);
-			
-		// }else{
-		// 	if(t == NULL){
-		// 		cout << "Variable not declared\n";
-		// 		exit(1);
-		// 	}else{
-		// 		if(current_scope < *(t->scope.begin())){
-		// 			cout << "Variable cannot be referenced in this scope\n;";
-		// 		}
-		// 	}
-		// }
+			sym_table[(*$1)] = *t;
+			// cout << *sym_table[(*$1)].scope.begin() << " ehfadsf \n";
+			cout << "inserted\n";
+		}
 		vec = {createnode("IDENTIFIER__" + *$1 , emp)}; 
 		$$ = createnode("Identifier", vec);
 	}
@@ -1143,26 +1148,29 @@ bool revise_ast(Node* root, Node* par, int idx){
 }
 
 int main(int argc, char* argv[]){
-	cout << "JHISDDAWD\n";
-   
 		string inp = argv[1];
 		string outp = argv[2];
-		cout << "JHISDDAWD\n";
-		// print symboltable
-		// for(auto i:sym_table){
-		// 	tab_item t = i.second;
-		// 	for(auto j: t.scope){
-		// 		cout << i.first << " " << j << endl;
-		// 	}
-		// }
+		
         freopen(inp.c_str(), "r", stdin);
         freopen(outp.c_str(), "w", stdout);
 		cout << "HII231\n";
         yyparse();
+		for(auto i:sym_table){
+			cout << "INSIDE for loop1 sym table \n";
+			tab_item t = i.second;
+			for(auto j: t.scope){ 
+				cout << "INSIDE for loop2 sym table \n";
+				cout << i.first << " { "; 
+				for(auto k:j){
+					cout << k << " ";
+				}
+				cout << "}" << endl;
+			}
+		}
         cout<<"strict digraph {\n";
-        make_ast(root, root, 0);
-        revise_ast(root, root, 0);
-        dfs(root);
+        // make_ast(root, root, 0);
+        // revise_ast(root, root, 0);
+        // dfs(root);
         cout<<"}\n";
 
     

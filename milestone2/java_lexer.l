@@ -40,6 +40,7 @@ Final_literal         {basic_literal}|{Char_Literal}|{String_Literal}|{Text_Bloc
 
 %x COMMENT1
 %x COMMENT2
+%option yylineno
 %%
 
 "//"                  {BEGIN(COMMENT1);}
