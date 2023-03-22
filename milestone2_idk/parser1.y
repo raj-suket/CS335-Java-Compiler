@@ -55,7 +55,7 @@
     std::string* lex;
 }
 
-%start try1
+%start CompilationUnit
 
 %token<lex> ABSTRACT
 %token<lex> AND
@@ -290,11 +290,6 @@
 %type<str_val> WhileStatementNoShortIf
 
 %%
-try1: try2											{vec = {$1}; root = createnode("try1", vec);}
-
-try2: Identifier {to_declare = 1;} Identifier {to_declare = 0;} Identifier {incr_scope();} try2 		{hide_scope(); vec = {$1, $3, $5, $7}; $$ = createnode("try2", vec);}
-|	Identifier {to_declare = 1;} Identifier {to_declare = 0;} Identifier			{cout << "HIIITHISTHI\n\n";cout << ($1)->val << "HUEHUE\n";vec = {$1, $3, $5};  $$ = createnode("try2", vec);}	
-	;
 Identifier:
 	IDENTIFIER 										{
 		cout << "HIInIdentifer\n";
@@ -439,7 +434,7 @@ Modifiers:
 	;
 
 Modifier:
-	PUBLIC 										{cout << "HII\n"; vec = {createnode("PUBLIC__" + *$1 , emp)}; $$ = createnode("Modifier", vec);}
+	PUBLIC 										{vec = {createnode("PUBLIC__" + *$1 , emp)}; $$ = createnode("Modifier", vec);}
 |	PROTECTED 										{vec = {createnode("PROTECTED__" + *$1 , emp)}; $$ = createnode("Modifier", vec);}
 |	PRIVATE 										{vec = {createnode("PRIVATE__" + *$1 , emp)}; $$ = createnode("Modifier", vec);}
 |	STATIC 										{vec = {createnode("STATIC__" + *$1 , emp)}; $$ = createnode("Modifier", vec);}

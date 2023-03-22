@@ -1,0 +1,48 @@
+Identifier name: append
+	 Type: 5
+	 Line Number: 10
+	 Scope: 0
+	 Types of Args: 
+
+Identifier name: x
+	 Type: 2
+	 Line Number: 10
+	 Scope: 00
+	 Types of Args: 
+
+Identifier name: dss
+	 Type: 2
+	 Line Number: 10
+	 Scope: 000
+	 Types of Args: 
+
+Identifier name: dssq
+	 Type: 3
+	 Line Number: 10
+	 Scope: 000
+	 Types of Args: 
+
+Identifier name: dssqq
+	 Type: 4
+	 Line Number: 10
+	 Scope: 000
+	 Types of Args: 
+
+Identifier name: hell
+	 Type: 6
+	 Line Number: 10
+	 Scope: 00
+	 Types of Args: integer float boolean 
+
+Identifier name: g
+	 Type: 2
+	 Line Number: 10
+	 Scope: 000
+	 Types of Args: 
+
+Identifier name: hj
+	 Type: 3
+	 Line Number: 10
+	 Scope: 00
+	 Types of Args: 
+
