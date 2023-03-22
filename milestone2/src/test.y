@@ -25,6 +25,7 @@ int yylex(void);
 struct Node{
     string val;
 	int nodetype=-1;
+	int lineno;
     vector<Node*> children;
 };
 
@@ -34,6 +35,7 @@ Node* createnode (string  val, vector<Node*>  children){
     for(int i=0;i<children.size();i++){
         temp->children.push_back(children[i]);
     }
+	temp->lineno = yylineno;
     return temp;
 }
 map<vector<int> , int> counts;
@@ -318,7 +320,7 @@ Literal:
 |	NULL_LITERAL									{vec = {createnode("NULL_LITERAL__" + *$1 , emp)}; $$ = createnode("Literal", vec);}
 |	INT_LITERAL										{vec = {createnode("INT_LITERAL__" + *$1 , emp)}; vec[0]->nodetype = typeMap["integer"]; $$ = createnode("Literal", vec);}
 |	FLOAT_LITERAL									{vec = {createnode("FLOAT_LITERAL__" + *$1 , emp)}; vec[0]->nodetype = typeMap["float"]; $$ = createnode("Literal", vec);}
-|	STRING_LITERAL									{vec = {createnode("STRING_LITERAL__" + *$1 , emp)}; vec[0]->nodetype = typeMap["VAR"]; $$ = createnode("Literal", vec);}
+|	STRING_LITERAL									{vec = {createnode("STRING_LITERAL__" + *$1 , emp)}; vec[0]->nodetype = typeMap["string"]; $$ = createnode("Literal", vec);}
 |	TEXTBLOCK_LITERAL								{vec = {createnode("TEXTBLOCK_LITERAL__" + *$1 , emp)}; vec[0]->nodetype = typeMap["VAR"]; $$ = createnode("Literal", vec);}
 |	CHAR_LITERAL									{vec = {createnode("CHAR_LITERAL__" + *$1 , emp)}; vec[0]->nodetype = typeMap["integer"]; $$ = createnode("Literal", vec);}
 	;
@@ -1479,7 +1481,6 @@ void traverse(Node* root)
 }
 
 set<string> bin_ops = {"EQUALTO","PLUSET","MINUSET","MULTET","DIVET","ANDET","LT","GT","LEQ","GEQ","OR","AND","BITOR","BITAND","POW","EQ","NEQ","LEFTSHIFT","RIGHTSHIFT","THREEGREAT","PLUS","MINUS","MULT","DIVIDE","MODULO"};
-
 string trim(string s){
 	string temp = "";
 	for(auto i:s){
@@ -1488,16 +1489,373 @@ string trim(string s){
 	}
 	return temp;
 }
+
+int semantic_checking(int type1, int type2, string op){
+	if( op == "EQUALTO" )
+		{
+			if(revMap[type1] == "integer"){
+				if(revMap[type2] == "integer" ){
+					return typeMap["integer"];
+				}
+				cerr << "Type error\n";
+				return -1;
+			}
+			if(revMap[type1] == "float"){
+				if(revMap[type2] == "integer" || revMap[type2] == "float"){
+					return typeMap["float"];
+				}
+				cerr << "Type error\n";
+				return -1;
+			}
+			if(revMap[type1] == "boolean"){
+				if(revMap[type2] == "boolean"){
+					return typeMap["boolean"];
+				}
+				cerr << "Type error\n";
+				return -1;
+			}
+			if(revMap[type1] == "VAR"){
+				return type2;
+			}
+		}
+	if( op == "PLUS")
+		{
+			if(revMap[type1]=="boolean"||revMap[type2]=="boolean")
+			{
+				cerr << "TypeError\n";
+				return -1;
+			}
+			if(revMap[type1]=="VAR"||revMap[type1]=="VAR")
+			{
+				return typeMap["VAR"];
+			}
+			if(revMap[type1]=="string"||revMap[type2]=="string")
+			{
+				return typeMap["string"];
+			}
+			if(revMap[type1]=="float"||revMap[type2]=="float")
+			{
+				return typeMap["float"];
+			}
+			return typeMap["integer"];
+		}
+	if( op == "MINUS")
+		{
+			if(revMap[type1] == "float"){
+				if(revMap[type2] == "integer" || revMap[type2] == "float"){
+					return typeMap["float"];
+				}
+				return -1;
+			}
+			if(revMap[type1] == "integer"){
+				if(revMap[type2] == "integer"){
+					return typeMap["integer"];
+				}
+				if(revMap[type2] == "float"){
+					return typeMap["float"];
+				}
+				return -1;
+			}
+			if(revMap[type1] == "boolean" || revMap[type1] == "string" || revMap[type1] == "VAR"){
+				return -1;
+			}
+		}
+	if( op == "MULT")
+		{
+			if(revMap[type1] == "float"){
+				if(revMap[type2] == "integer" || revMap[type2] == "float"){
+					return typeMap["float"];
+				}
+				return -1;
+			}
+			if(revMap[type1] == "integer"){
+				if(revMap[type2] == "integer"){
+					return typeMap["integer"];
+				}
+				if(revMap[type2] == "float"){
+					return typeMap["float"];
+				}
+				return -1;
+			}
+			if(revMap[type1] == "boolean" || revMap[type1] == "string" || revMap[type1] == "VAR"){
+				return -1;
+			}
+		}
+	if( op == "DIVIDE")
+		{
+			if(revMap[type1] == "float"){
+				if(revMap[type2] == "integer" || revMap[type2] == "float"){
+					return typeMap["float"];
+				}
+				return -1;
+			}
+			if(revMap[type1] == "integer"){
+				if(revMap[type2] == "integer"){
+					return typeMap["integer"];
+				}
+				if(revMap[type2] == "float"){
+					return typeMap["float"];
+				}
+				return -1;
+			}
+			if(revMap[type1] == "boolean" || revMap[type1] == "string" || revMap[type1] == "VAR"){
+				return -1;
+			}
+		}
+	if( op == "MODULO")
+		{
+			if(revMap[type1] == "float"){
+				if(revMap[type2] == "integer" || revMap[type2] == "float"){
+					return typeMap["float"];
+				}
+				return -1;
+			}
+			if(revMap[type1] == "integer"){
+				if(revMap[type2] == "integer"){
+					return typeMap["integer"];
+				}
+				if(revMap[type2] == "float"){
+					return typeMap["float"];
+				}
+				return -1;
+			}
+			if(revMap[type1] == "boolean" || revMap[type1] == "string" || revMap[type1] == "VAR"){
+				return -1;
+			}
+		}
+	if( op == "LEFTSHIFT")
+		{
+			if(revMap[type1] == "integer"){
+				if(revMap[type2] == "integer"){
+					return typeMap["integer"];
+				}
+				return -1;
+			}
+			return -1;
+		}
+	if( op == "RIGHTSHIFT")
+		{
+			if(revMap[type1] == "integer"){
+				if(revMap[type2] == "integer"){
+					return typeMap["integer"];
+				}
+				return -1;
+			}
+			return -1;
+		}
+	if( op == "THREEGREAT")
+		{
+			if(revMap[type1] == "integer"){
+				if(revMap[type2] == "integer"){
+					return typeMap["integer"];
+				}
+				return -1;
+			}
+			return -1;
+		}
+	if( op == "EQ")
+		{
+			if(type1 == type2 || revMap[type1] == "VAR" || revMap[type2] == "VAR"){
+				return typeMap["boolean"];
+			}
+			if((revMap[type1] == "float" && revMap[type2] == "integer") || (revMap[type2] == "float" && revMap[type1] == "integer")){
+				return typeMap["boolean"];
+			}
+			return -1;
+		}
+	if( op == "NEQ")
+		{
+			if(type1 == type2 || revMap[type1] == "VAR" || revMap[type2] == "VAR"){
+				return typeMap["boolean"];
+			}
+			if((revMap[type1] == "float" && revMap[type2] == "integer") || (revMap[type2] == "float" && revMap[type1] == "integer")){
+				return typeMap["boolean"];
+			}
+			return -1;
+		}
+	if( op == "BITAND")
+		{
+			if(revMap[type1] == "integer"){
+				if(revMap[type2] == "integer"){
+					return typeMap["integer"];
+				}
+				return -1;
+			}
+			return -1;
+		}
+	if( op == "BITOR")
+		{
+			if(revMap[type1] == "integer"){
+				if(revMap[type2] == "integer"){
+					return typeMap["integer"];
+				}
+				return -1;
+			}
+			return -1;
+		}
+	if( op == "POW")
+		{
+			if(revMap[type1] == "integer"){
+				if(revMap[type2] == "integer"){
+					return typeMap["integer"];
+				}
+				return -1;
+			}
+			return -1;
+		}
+	if( op == "AND")
+		{
+			if(revMap[type1]=="boolean"&&revMap[type2]=="boolean")
+			{
+				return typeMap["boolean"];
+			}
+			return -1;
+		}
+	if( op == "OR")
+		{
+			if(revMap[type1]=="boolean"&&revMap[type2]=="boolean")
+			{
+				return typeMap["boolean"];
+			}
+			return -1;
+		}
+	if( op == "GT")
+		{
+			if(type1 == type2 ||revMap[type1] == "VAR" || revMap[type2] == "VAR"||(revMap[type2]=="float" && revMap[type1]=="integer")||(revMap[type1]=="float" && revMap[type2]=="integer") )
+			{
+				return typeMap["boolean"];
+			}
+			return -1;
+		}
+	if( op == "LT")
+		{
+			if(type1 == type2 ||revMap[type1] == "VAR" || revMap[type2] == "VAR"||(revMap[type2]=="float" && revMap[type1]=="integer")||(revMap[type1]=="float" && revMap[type2]=="integer") )
+			{
+				return typeMap["boolean"];
+			}
+			return -1;
+		}
+	if( op == "GEQ")
+		{
+			if(type1 == type2 ||revMap[type1] == "VAR" || revMap[type2] == "VAR"||(revMap[type2]=="float" && revMap[type1]=="integer")||(revMap[type1]=="float" && revMap[type2]=="integer") )
+			{
+				return typeMap["boolean"];
+			}
+			return -1;
+		}
+	if( op == "LEQ")
+		{
+			if(type1 == type2 ||revMap[type1] == "VAR" || revMap[type2] == "VAR"||(revMap[type2]=="float" && revMap[type1]=="integer")||(revMap[type1]=="float" && revMap[type2]=="integer") )
+			{
+				return typeMap["boolean"];
+			}
+			return -1;
+		}
+	if( op == "PLUSET")
+		{
+			if(revMap[type1] == "integer"){
+				if(revMap[type2] == "integer"){
+					return typeMap["integer"];
+				}
+				if(revMap[type2] == "float"){
+					return typeMap["float"];
+				}
+				return -1;
+			}
+			if(revMap[type1] == "float"){
+				if(revMap[type2] == "integer" || revMap[type2] == "float"){
+					return typeMap["float"];
+				}
+				return -1;
+			}
+			if(revMap[type1] == "VAR"){
+				return typeMap["VAR"];
+			}
+			return -1;
+		}
+	if( op == "MINUSET")
+		{
+			if(revMap[type1] == "integer"){
+				if(revMap[type2] == "integer"){
+					return typeMap["integer"];
+				}
+				if(revMap[type2] == "float"){
+					return typeMap["float"];
+				}
+				return -1;
+			}
+			if(revMap[type1] == "float"){
+				if(revMap[type2] == "integer" || revMap[type2] == "float"){
+					return typeMap["float"];
+				}
+				return -1;
+			}
+			return -1;
+		}
+	if( op == "MULTET")
+		{
+			if(revMap[type1] == "integer"){
+				if(revMap[type2] == "integer"){
+					return typeMap["integer"];
+				}
+				if(revMap[type2] == "float"){
+					return typeMap["float"];
+				}
+				return -1;
+			}
+			if(revMap[type1] == "float"){
+				if(revMap[type2] == "integer" || revMap[type2] == "float"){
+					return typeMap["float"];
+				}
+				return -1;
+			}
+			return -1;
+		}
+	if( op == "DIVET")
+		{
+			if(revMap[type1] == "integer"){
+				if(revMap[type2] == "integer"){
+					return typeMap["integer"];
+				}
+				if(revMap[type2] == "float"){
+					return typeMap["float"];
+				}
+				return -1;
+			}
+			if(revMap[type1] == "float"){
+				if(revMap[type2] == "integer" || revMap[type2] == "float"){
+					return typeMap["float"];
+				}
+				return -1;
+			}
+			return -1;
+		}
+	if( op == "ANDET")
+		{
+			if(revMap[type1] == "integer"){
+				if(revMap[type2] == "integer"){
+					return typeMap["integer"];
+				}
+				return -1;
+			}
+			return -1;
+		}
+	return -1;
+}	
+
 int typeCheck(Node* root){
 	if(root->nodetype!=-1){
 		return root->nodetype;
 	}
-	if(typeCheck(root->children[0])!=typeCheck(root->children[1])){
-		cerr<<"TypeError\n";
+	int type1 = typeCheck(root->children[0]);
+	int type2 = typeCheck(root->children[1]);
+	int res = semantic_checking(type1, type2, trim(root->val));
+	if(res == -1){
+		cerr<<"TypeError at line number: " << root->lineno << "\n";
 		exit(0);
 		// yyerror("Error");
 	}
-	return root->nodetype=typeCheck(root->children[0]);
+	return root->nodetype=res;
 }
 
 void typeCheckDfs(Node* root){
@@ -1510,19 +1868,26 @@ void typeCheckDfs(Node* root){
 	}
 }
 
+void init_map(){
+	typeMap["VAR"] = 1;
+	revMap[1] = "VAR";
+
+	typeMap["integer"] = 2;
+	revMap[2] = "integer";
+
+	typeMap["float"] = 3;
+	revMap[3] = "float";
+
+	typeMap["boolean"] = 4;
+	revMap[4] = "boolean";
+
+	typeMap["string"] = 5;
+	revMap[5] = "string";
+}
+
 int main(int argc, char* argv[]){
     try{
-		typeMap["VAR"] = 1;
-		revMap[1] = "VAR";
-
-		typeMap["integer"] = 2;
-		revMap[2] = "integer";
-
-		typeMap["float"] = 3;
-		revMap[3] = "float";
-
-		typeMap["boolean"] = 4;
-		revMap[4] = "boolean";
+		init_map();
 		string inp = argv[1];
 		string outp = argv[2];
         freopen(inp.c_str(), "r", stdin);

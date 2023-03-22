@@ -1,8 +1,6 @@
 #include "bits/stdc++.h"
 using namespace std;
 
-// vector<int> current_scope(1,0);
-
 typedef struct tab_item{
     // int offset;
     int lines;
