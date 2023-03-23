@@ -1169,6 +1169,7 @@ void vardeclaratorid(Node* root, string type_)
 		string temp = root->children[0]->children[0]->val;
 		temp = temp.substr(12,temp.length()-1);
 		root->children[0]->children[0]->nodetype = insert_to_map(type_);
+		root->children[0]->nodetype = insert_to_map(type_);
 		insert(temp,current_scope,root->children[0]->lineno,insert_to_map(type_), empty_string_vec);
 	}else{
 		type_ = "array_" + type_;
@@ -1244,8 +1245,14 @@ vector<string> original_formal_param_list(Node* root){
 }
 void typeCheckDfs(Node* );
 void arg_expr(Node* root, vector<string> & type_args){
+	if(trim(root->val) == "IDENTIFIER"){
+		string temp = root->val;
+		temp=temp.substr(12,temp.length()-1);
+		int index = scope_check(temp,current_scope);
+		root->nodetype = sym_table[index].second.type;
+	}
 	typeCheckDfs(root);
-	// cerr << "Reached here?\n" << root->nodetype << "\n";
+	// cerr << "Reached here?\n" << root->val << " " << root->nodetype << "\n";
 	if(root->nodetype != -1) 
 		type_args.push_back(revMap[root->nodetype]);
 }
@@ -1340,6 +1347,7 @@ void traverse(Node* root)
 			exit(0);
 		}
 		root->children[0]->nodetype = sym_table[index].second.type;
+		root->nodetype = sym_table[index].second.type;
 	}
 
 	if(root->val=="FOR__for")
@@ -1487,8 +1495,10 @@ void traverse(Node* root)
 				revise_ast(root->children[i], root->children[i], 0);
 				vector<string> type_args;
 				arg_list(root->children[i], type_args);
-
+				// cerr << root->children[i]->val << endl;
 				if(type_args != t.type_args){
+					// print(type_args);
+					// print(t.type_args);
 					cerr << "Function arguments dont match\n";
 					exit(0);
 				}
