@@ -1131,9 +1131,10 @@ void make_ast(Node* root, Node* par, int idx){
 }
 
 set<string> to_do = {"INSTANCEOF","EQUALTO","PLUSET","MINUSET","MULTET","DIVET","ANDET","LT","GT","LEQ","GEQ","OR","AND","BITOR","BITAND","POW","EQ","NEQ","LEFTSHIFT","RIGHTSHIFT","THREEGREAT","PLUS","MINUS","MULT","DIVIDE","MODULO","TILDE","NOT","QUEST","COLON"};
+set<string> bin_ops = {"EQUALTO","PLUSET","MINUSET","MULTET","DIVET","ANDET","LT","GT","LEQ","GEQ","OR","AND","BITOR","BITAND","POW","EQ","NEQ","LEFTSHIFT","RIGHTSHIFT","THREEGREAT","PLUS","MINUS","MULT","DIVIDE","MODULO"};
 
 void traverse(Node*);
-
+int typeCheck(Node*);
 string extractor(string s){
     string t="";
     for(int i=0;i<s.size()-1;i++){
@@ -1168,7 +1169,7 @@ void vardeclaratorid(Node* root, string type_)
 		string temp = root->children[0]->children[0]->val;
 		temp = temp.substr(12,temp.length()-1);
 		root->children[0]->children[0]->nodetype = insert_to_map(type_);
-		insert(temp,current_scope,yylineno,insert_to_map(type_), empty_string_vec);
+		insert(temp,current_scope,root->children[0]->lineno,insert_to_map(type_), empty_string_vec);
 	}else{
 		type_ = "array_" + type_;
 		vardeclaratorid(root->children[0], type_);
@@ -1188,19 +1189,6 @@ void vardeclist(Node* root, string type_)
 	{
 		vardeclist(root->children[0], type_);
 		vardeclarator(root->children[2], type_);
-	}
-}
-
-void nameFun(Node* root){
-	if(root->children[0]->val == "Identifier"){
-		string temp = root->children[0]->children[0]->val;
-		temp = temp.substr(12,temp.length()-1);
-		insert(temp,current_scope,yylineno,16, empty_string_vec);
-	}else{
-		nameFun(root->children[0]);
-		string temp = root->children[2]->children[0]->val;
-		temp = temp.substr(12,temp.length()-1);
-		insert(temp,current_scope,yylineno,16, empty_string_vec);
 	}
 }
 
@@ -1295,7 +1283,7 @@ void method_declarator(Node* root, string type_)
 		{
 			f = 1;
 			vector<string> type_formal_params = original_formal_param_list(root->children[i]);
-			insert(temp,temp_curr_scope,yylineno,insert_to_map(type_), type_formal_params);
+			insert(temp,temp_curr_scope,root->lineno,insert_to_map(type_), type_formal_params);
 		}
 		if(root->children[i]->val =="RRB__)"){
 			current_scope.pop_back();
@@ -1304,10 +1292,42 @@ void method_declarator(Node* root, string type_)
 		}
 	}
 	if(!f){
-		insert(temp,temp_curr_scope,yylineno,insert_to_map(type_), empty_string_vec);
+		insert(temp,temp_curr_scope,root->lineno,insert_to_map(type_), empty_string_vec);
 	}
 }
 
+string array_access_name(Node* root){
+	if(root->children[0]->val == "Name"){
+		string temp;
+		if(root->children[0]->children[0]->val=="Identifier")
+		{
+			temp = root->children[0]->children[0]->children[0]->val;
+			temp = temp.substr(12,temp.length()-1);
+		}
+		else
+		{
+			temp = root->children[0]->children[2]->children[0]->val;
+			temp = temp.substr(12,temp.length()-1);
+		}
+		return temp;
+	}else{
+		return array_access_name(root->children[0]->children[0]);
+	}
+}
+
+void array_access_type_check(Node* root, vector<string> & type_args){
+
+	if(root->children[0]->val == "ArrayAccess"){
+		array_access_type_check(root->children[0], type_args);
+	}
+
+	typeCheck(root->children[2]);
+	if(revMap[root->children[2]->nodetype] != "integer"){
+		cerr << "Array index should be an integer\n";
+		exit(0);
+	}
+	type_args.push_back("integer");
+}
 
 void traverse(Node* root)
 {
@@ -1366,7 +1386,7 @@ void traverse(Node* root)
 				string temp = ((root->children[i])->children[0])->val;
 				temp = temp.substr(12,temp.length()-1);
 				string s = "class";
-				insert(temp,current_scope,yylineno,insert_to_map(s), empty_string_vec);
+				insert(temp,current_scope,root->children[i]->lineno,insert_to_map(s), empty_string_vec);
 				root->children[i]->children[0]->nodetype = insert_to_map(s);
 				incr_scope();
 			}
@@ -1385,7 +1405,7 @@ void traverse(Node* root)
 			{
 				string temp = ((root->children[i])->children[0])->val;
 				temp = temp.substr(12,temp.length()-1);
-				insert(temp,current_scope,yylineno,15,empty_string_vec);
+				insert(temp,current_scope,root->children[i]->lineno,15,empty_string_vec);
 				incr_scope();
 			}
 			if(root->children[i]->val == "FormalParameterList"){
@@ -1478,27 +1498,28 @@ void traverse(Node* root)
 	}
 	if(root->val=="ArrayAccess")
 	{
-		string temp;
-		if(root->children[0]->children[0]->val=="Identifier")
-		{
-			temp = root->children[0]->children[0]->children[0]->val;
-			temp = temp.substr(12,temp.length()-1);
-		}
-		else
-		{
-			temp = root->children[0]->children[2]->children[0]->val;
-			temp = temp.substr(12,temp.length()-1);
-		}
+		string temp = array_access_name(root);
+		make_ast(root, root, 0);
+		revise_ast(root, root, 0);
+		
+		vector<string> type_args;
+
+		array_access_type_check(root, type_args);
+
 		int index = lookup_scope(temp,current_scope);
 		tab_item t = sym_table[index].second;
 		string type__ =  revMap[t.type];
-		if(type__[0]!='a')
-		{
-			cout<<"Calling invalid array"<<endl;
-			exit(0);
+		// cerr << "Type name : " << type__ << endl;
+		for(auto i:type_args){
+			if(type__[0]!='a')
+			{
+				cerr<<"Accessing more dimensions"<<endl;
+				exit(0);
+			}
+			type__ = type__.substr(6,type__.length()-1);
 		}
-		type__ = type__.substr(6,type__.length()-1);
 		root->nodetype = insert_to_map(type__);
+		return;
 	}
 	//field access remains
 
@@ -1520,16 +1541,6 @@ void traverse(Node* root)
 		counts[current_scope]--;
 	}
 }
-
-set<string> bin_ops = {"EQUALTO","PLUSET","MINUSET","MULTET","DIVET","ANDET","LT","GT","LEQ","GEQ","OR","AND","BITOR","BITAND","POW","EQ","NEQ","LEFTSHIFT","RIGHTSHIFT","THREEGREAT","PLUS","MINUS","MULT","DIVIDE","MODULO"};
-// string trim(string s){
-// 	string temp = "";
-// 	for(auto i:s){
-// 		if(i == '_') break;
-// 		temp.push_back(i);
-// 	}
-// 	return temp;
-// }
 
 int semantic_checking(int type1, int type2, string op){
 	if( op == "EQUALTO" )
@@ -1969,7 +1980,8 @@ string getLiteral(string & s){
 
 map<Node*, bool> visited;
 map<Node*, int> blocknum;
-map<Node*, int> funcnum;
+map<Node*, int> ifnum;
+map<Node*, int> blockif;
 map<string, int> sizemap;
 void fill_sizemap(){
 	sizemap["array_integer"]=4;
@@ -1983,6 +1995,33 @@ int getRecentLoop(Node* root){
 		root=root->parent;
 	}
 	return blocknum[root];
+}
+
+int getRecentLoopif(Node* root){
+	while(ifnum.find(root)==ifnum.end()){
+		root=root->parent;
+	}
+	return ifnum[root];
+}
+
+int getMyif(Node* root){
+	while(blockif.find(root)==blockif.end()){
+		root=root->parent;
+	}
+	return blockif[root];
+}
+
+void getParams(Node* root, vector<int> & v){
+	for(auto child:root->children){
+		if(child->val=="ArgumentList"){
+			getParams(child, v);
+		}
+	}
+	for(auto child:root->children){
+		if(trim(child->val)!="COMMA" && child->val!="ArgumentList"){
+			v.push_back(child->reg);
+		}
+	}
 }
 
 void gen_3ac(Node* root){
@@ -2023,18 +2062,23 @@ void gen_3ac(Node* root){
 		numins++;
 	}
 	if(root->val=="IfThenElseStatement"){
+		if(root->parent->val!="IfThenElseStatement"){
+			ifnum[root]=blockscalled;
+		}
 		Node* curnode = root;
 		while(curnode->val=="IfThenElseStatement" && visited[curnode->children[2]]==false){
 			gen_3ac(curnode->children[2]);
 			puTabs();
-			out3ac<<"Case t"<<curnode->children[2]->reg<<" : "<<"Goto Block"<<blockscalled<<'\n';
-			blockscalled++;
+			blockif[curnode]=blockscalled;
+			out3ac<<"Case t"<<curnode->children[2]->reg<<" : "<<"Goto Block"<<blockscalled++<<'\n';
 			curnode = curnode->children[6];
 			if(curnode->val=="IfThenStatement"){
+				blockif[curnode]=blockscalled;
 				gen_3ac(curnode->children[2]);
 				puTabs();
 				out3ac<<"Case t"<<curnode->children[2]->reg<<" : "<<"Goto Block"<<blockscalled++<<'\n';
 			}else if(curnode->val=="Block"){
+				blockif[curnode]=blockscalled;
 				puTabs();
 				out3ac<<"Goto Block"<<blockscalled++<<'\n';
 			}
@@ -2043,26 +2087,36 @@ void gen_3ac(Node* root){
 		for(auto child:root->children){
 			if(child->val=="Block"){
 				puTabs();
-				out3ac<<"Block"<<blocksgen++<<": \n";
+				out3ac<<"Block"<<getMyif(child)<<": \n";
 				numins++;
 				gen_3ac(child);
+				puTabs();
+				out3ac<<"Goto EndIfBlock"<<getRecentLoopif(root)<<'\n';
 				numins--;
 			}
 		}
 	}
 	if(root->val=="IfThenStatement"){
 		if(!visited[root->children[2]]){
+			if(root->parent->val!="IfThenElseStatement"){
+				ifnum[root]=blockscalled;
+				blockif[root]=blockscalled;
+			}
 			gen_3ac(root->children[2]);
 			puTabs();
 			out3ac<<"Case t"<<root->children[2]->reg<<" : "<<"Goto Block"<<blockscalled<<'\n';
+			puTabs();
+			out3ac<<"Goto EndIfBlock"<<getRecentLoopif(root)<<'\n';
 			blockscalled++;
 		}
 		for(auto child:root->children){
 			if(child->val=="Block"){
 				puTabs();
-				out3ac<<"Block"<<blocksgen++<<": \n";
+				out3ac<<"Block"<<getMyif(child)<<": \n";
 				numins++;
 				gen_3ac(child);
+				puTabs();
+				out3ac<<"Goto EndIfBlock"<<getRecentLoopif(root)<<'\n';
 				numins--;
 			}
 		}
@@ -2114,7 +2168,7 @@ void gen_3ac(Node* root){
 			}
 		}
 		numins--;
-		Node* cond;
+		Node* cond=NULL;
 		flag=0;
 		for(auto child:root->children){
 			if(flag==1){
@@ -2129,7 +2183,11 @@ void gen_3ac(Node* root){
 			}
 		}
 		puTabs();
-		out3ac<<"Case t"<<cond->reg<<" : "<<"Goto Block"<<blocknum[root]<<'\n';
+		if(cond){
+			out3ac<<"Case t"<<cond->reg<<" : "<<"Goto Block"<<blocknum[root]<<'\n';
+		}else{
+			out3ac<<"Goto Block"<<blocknum[root]<<'\n';
+		}
 	}
 	for(auto child:root->children){
 		if(!((root->val=="MethodInvocation" && trim(child->val)=="IDENTIFIER")
@@ -2138,28 +2196,34 @@ void gen_3ac(Node* root){
 			gen_3ac(child);
 		}
 	}
+	if(root->val=="IfThenElseStatement" || root->val=="IfThenStatement"){
+		if(root->parent->val!="IfThenElseStatement"){
+			puTabs();
+			out3ac<<"EndIfBlock"<<getRecentLoopif(root)<<'\n';
+		}
+	}
 	if(root->val=="WhileStatement" || root->val=="BasicForStatement"){
 		puTabs();
 		out3ac<<"LoopEnd"<<blocknum[root]<<"\n";
 	}
 	if(root->val=="MethodInvocation"){
 		root->reg = tot_regs++;
+		int to_pop=0;
 		if(root->children.size()==4){
-			for(auto child:root->children[2]->children){
-				if(trim(child->val)!="COMMA"){
-					puTabs();
-					out3ac<<"PushParams "<<"t"<<child->reg<<'\n';
-				}
+			vector<int> v;
+			getParams(root->children[2], v);
+			for(auto i:v){
+				puTabs();
+			 	out3ac<<"PushParams "<<"t"<<i<<'\n';
 			}
+			to_pop=v.size();
 		}
 		puTabs();
 		out3ac<<"t"<<root->reg<<" = "<<"LCall "<<ident(root->children[0]->val)<<'\n';
 		if(root->children.size()==4){
-			for(auto child:root->children[2]->children){
-				if(trim(child->val)!="COMMA"){
-					puTabs();
-					out3ac<<"PopParam\n";
-				}
+			for(int i=0;i<to_pop;i++){
+				puTabs();
+				out3ac<<"PopParams\n";
 			}
 		}
 	}else if(root->val=="ReturnStatement"){
@@ -2173,6 +2237,10 @@ void gen_3ac(Node* root){
 	else if(trim(root->val)=="CONTINUE"){
 		puTabs();
 		out3ac<<"Goto UpdateLoop"<<getRecentLoop(root)<<'\n';
+	}
+	else if(trim(root->val)=="BREAK"){
+		puTabs();
+		out3ac<<"Goto LoopEnd"<<getRecentLoop(root)<<'\n';
 	}
 	else if(getLiteral(root->val)!=""){
 		root->reg = tot_regs++;
@@ -2285,6 +2353,61 @@ void gen_3ac(Node* root){
 	}
 }
 
+map<string, vector<pair<string, tab_item> > > main_table;
+
+void change_scope()
+{
+	int count =0;
+	for(auto &x : sym_table)
+	{
+		if((revMap[x.second.type])[0]=='f' && (revMap[x.second.type])[1]=='u' )
+		{
+			x.second.scope.push_back(count);
+			count++;
+		}
+	}
+}
+
+void function_fields(string function_name, vector<int> &func_scope)
+{
+	for(auto x: sym_table)
+	{
+		vector<int> temp = x.second.scope;
+		if(is_prefix(func_scope,temp) && x.first!=function_name)
+		{
+			main_table[function_name].push_back(x);
+		}
+	}
+}
+
+void main_create()
+{
+	for(auto x: sym_table)
+	{
+		tab_item t = x.second;
+		if((revMap[t.type])[0]=='f' && (revMap[t.type])[1]=='u') 
+		{
+			function_fields(x.first, t.scope);
+		}
+	}
+}
+
+void main_dump()
+{
+	ofstream of;
+	for(auto it:main_table){
+		string s="../dumps/"+it.first;
+		string fl =  s+".csv";
+		of.open(fl.c_str());
+		of<<"Lexeme,Token,Line,Type\n";
+		for(auto j:it.second)
+		{
+			of << j.first << ",Identifier," << j.second.lines << "," << revMap[j.second.type] << endl;
+		}
+		of.close();
+	}
+}
+
 void init_map(){
 	typeMap["VAR"] = 1;
 	revMap[1] = "VAR";
@@ -2322,6 +2445,8 @@ int main(int argc, char* argv[]){
         dfs(root);
         cout<<"}\n";
 		typeCheckDfs(root);
+		main_create();
+		main_dump();
     }catch (...){
         cerr << "Compilation Error\n";
     }
