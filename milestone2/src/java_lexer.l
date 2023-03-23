@@ -36,7 +36,7 @@ Char_Literal           "\'"({Escape_Sequence}|{Input_Character})?"\'"
 String_input_character [^\n\"]
 String_Character       {String_input_character}|{Escape_Sequence}
 String_Literal        "\""{String_Character}*"\""
-
+printStatement         "System.out.println(".*");"
 
 %x COMMENT1
 %x COMMENT2
@@ -61,6 +61,7 @@ String_Literal        "\""{String_Character}*"\""
 <COMMENT2>"\r\n"      {lines++;}
 <COMMENT2>.           {/*ignore*/}           
 
+{printStatement}      {}
 {Bool_literal}        {yylval.lex = new string(yytext); return BOOL_LITERAL;}
 {Null_literal}        {yylval.lex = new string(yytext); return NULL_LITERAL;}
 {Int_literal}         {yylval.lex = new string(yytext); return INT_LITERAL;}

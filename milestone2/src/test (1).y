@@ -15,6 +15,22 @@ int insert_to_map(string & s){
 	return typeMap[s];
 }
 
+void fillMap(){
+	typeMap["integer"] = 1;
+	typeMap["float"]   = 2;
+	typeMap["boolean"] = 3;
+	typeMap["array_integer"] = 4;
+	typeMap["array_float"]   = 5;
+	typeMap["array_boolean"] = 6;
+	typeMap["function_integer"] = 7;
+	typeMap["function_float"] = 8;
+	typeMap["function_boolean"] = 9;
+	typeMap["function_integer_arraytype"] = 10;
+	typeMap["function_float_arraytype"] = 11;
+	typeMap["function_boolean_arraytype"] = 12;
+	typeMap["function_void"] = 13;
+}
+
 int yyerror(const char* s)
 {
 	cerr<<"YYERROR\n"<<yylineno<<endl;
@@ -25,12 +41,11 @@ int yylex(void);
 int regcount=1;
 
 struct Node{
-    string val;
 	int nodetype=-1;
-	int lineno;
-    vector<Node*> children;
 	int reg=-1;
 	vector<string> inst;
+    string val;
+    vector<Node*> children;
 	Node* parent;
 };
 
@@ -38,9 +53,13 @@ Node* createnode (string  val, vector<Node*>  children){
     Node * temp = new Node;
     temp->val = val;
     for(int i=0;i<children.size();i++){
+		// if(!children[i])
+		// {
+		// 	cout<<yylineno<<endl;
+		// 	// yyerror("Error");
+		// }
         temp->children.push_back(children[i]);
     }
-	temp->lineno = yylineno;
     return temp;
 }
 map<vector<int> , int> counts;
@@ -53,7 +72,7 @@ void hide_scope(){
 void incr_scope(){
     current_scope.push_back(counts[current_scope]++);
 }
-void print(vector<string> temp){
+void print(vector<int> temp){
 	for(auto i:temp) cerr << i << " ";
 	cerr << endl;
 }
@@ -61,7 +80,6 @@ Node* root;
 
 vector<Node *> emp;
 vector<Node *> vec;
-vector<string> empty_string_vec;
 %}
 
 
@@ -321,13 +339,13 @@ Identifier:
 	;
 
 Literal:
-	BOOL_LITERAL									{vec = {createnode("BOOL_LITERAL__" + *$1 , emp)}; vec[0]->nodetype = typeMap["boolean"]; $$ = createnode("Literal", vec);}				
+	BOOL_LITERAL									{vec = {createnode("BOOL_LITERAL__" + *$1 , emp)}; $$ = createnode("Literal", vec);}				
 |	NULL_LITERAL									{vec = {createnode("NULL_LITERAL__" + *$1 , emp)}; $$ = createnode("Literal", vec);}
-|	INT_LITERAL										{vec = {createnode("INT_LITERAL__" + *$1 , emp)}; vec[0]->nodetype = typeMap["integer"]; $$ = createnode("Literal", vec);}
-|	FLOAT_LITERAL									{vec = {createnode("FLOAT_LITERAL__" + *$1 , emp)}; vec[0]->nodetype = typeMap["float"]; $$ = createnode("Literal", vec);}
-|	STRING_LITERAL									{vec = {createnode("STRING_LITERAL__" + *$1 , emp)}; vec[0]->nodetype = typeMap["string"]; $$ = createnode("Literal", vec);}
-|	TEXTBLOCK_LITERAL								{vec = {createnode("TEXTBLOCK_LITERAL__" + *$1 , emp)}; vec[0]->nodetype = typeMap["VAR"]; $$ = createnode("Literal", vec);}
-|	CHAR_LITERAL									{vec = {createnode("CHAR_LITERAL__" + *$1 , emp)}; vec[0]->nodetype = typeMap["integer"]; $$ = createnode("Literal", vec);}
+|	INT_LITERAL										{vec = {createnode("INT_LITERAL__" + *$1 , emp)}; $$ = createnode("Literal", vec);}
+|	FLOAT_LITERAL									{vec = {createnode("FLOAT_LITERAL__" + *$1 , emp)}; $$ = createnode("Literal", vec);}
+|	STRING_LITERAL									{vec = {createnode("STRING_LITERAL__" + *$1 , emp)}; $$ = createnode("Literal", vec);}
+|	TEXTBLOCK_LITERAL								{vec = {createnode("TEXTBLOCK_LITERAL__" + *$1 , emp)}; $$ = createnode("Literal", vec);}
+|	CHAR_LITERAL									{vec = {createnode("CHAR_LITERAL__" + *$1 , emp)}; $$ = createnode("Literal", vec);}
 	;
 
 IntegralType:
@@ -1097,18 +1115,19 @@ SwitchExpression:
 typedef long long ll;
 set<char> escapes = {'\a', '\b', '\f', '\n', '\r', '\t', '\v', '\'', '\"', '\?', '\\'};
 
-string trim(string & );
 
 void dfs(Node* root){
+	// if(!root){
+	// 	yyerror("Error");
+	// 	return;
+	// }
     cout<<"\t"<<(ll)root<<"[label=\"";
     for(char c:root->val){
         if(escapes.find(c)!=escapes.end()){
             cout<<"\\";
         }
         cout<<c;
-    }
-	cout << "NodeType=" << root->nodetype;
-	cout<<"\"];\n";
+    }cout<<"\"];\n";
     for(auto child:root->children){
         cout<<"\t"<<(ll)root<<" -> "<<(ll)child<<";\n";
     }
@@ -1119,6 +1138,10 @@ void dfs(Node* root){
 
 
 void make_ast(Node* root, Node* par, int idx){
+	// if((!root) || (!par)){
+	// 	yyerror("Error");
+	// 	return;
+	// }
     if(root!=par && root->children.size()==1){
         par->children[idx] = root->children[0];
         free(root);
@@ -1146,6 +1169,10 @@ string extractor(string s){
 }
 
 bool revise_ast(Node* root, Node* par, int idx){
+	// if((!root) || (!par)){
+	// 	yyerror("Error");
+	// 	return false;
+	// }
     if(root->children.size()==0){
         if(to_do.find(extractor(root->val))!=to_do.end()){
             par->val = root->val;
@@ -1167,8 +1194,8 @@ void vardeclaratorid(Node* root, string type_)
 	if(root->children[0]->val == "Identifier"){
 		string temp = root->children[0]->children[0]->val;
 		temp = temp.substr(12,temp.length()-1);
-		root->children[0]->children[0]->nodetype = insert_to_map(type_);
-		insert(temp,current_scope,yylineno,insert_to_map(type_), empty_string_vec);
+		// cerr << temp << " byee\n";
+		insert(temp,current_scope,yylineno,typeMap[type_]);
 	}else{
 		type_ = "array_" + type_;
 		vardeclaratorid(root->children[0], type_);
@@ -1180,8 +1207,10 @@ void vardeclarator(Node* root, string type_)
 }
 void vardeclist(Node* root, string type_)
 {
+	// cout<<root->children[0]->val<<endl;
 	if(root->children[0]->val == "VariableDeclarator")
 	{	
+		// cerr << "BYEE\n";
 		vardeclarator(root->children[0], type_);
 	}
 	else
@@ -1195,12 +1224,12 @@ void nameFun(Node* root){
 	if(root->children[0]->val == "Identifier"){
 		string temp = root->children[0]->children[0]->val;
 		temp = temp.substr(12,temp.length()-1);
-		insert(temp,current_scope,yylineno,16, empty_string_vec);
+		insert(temp,current_scope,yylineno,16);
 	}else{
 		nameFun(root->children[0]);
 		string temp = root->children[2]->children[0]->val;
 		temp = temp.substr(12,temp.length()-1);
-		insert(temp,current_scope,yylineno,16, empty_string_vec);
+		insert(temp,current_scope,yylineno,16);
 	}
 }
 
@@ -1225,101 +1254,41 @@ string typefun(Node* root){
 	return "";
 }
 
-void formal_param(Node* root, vector<string> &types_formal_params){
-	if(root->children[0]->val=="Modifiers")
-	{	
-		string type_param = typefun(root->children[1]);
-		types_formal_params.push_back(type_param);
-		vardeclaratorid(root->children[2], type_param); 
-	}else
-	{
-		string type_param = typefun(root->children[0]);
-		types_formal_params.push_back(type_param);
-		vardeclaratorid(root->children[1], type_param);
-	}
-}
-
-void formal_param_list(Node* root, vector<string> &types_formal_params){
-	if(root->children[0]->val == "FormalParameter"){
-		formal_param(root->children[0], types_formal_params);
-	}else{
-		formal_param_list(root->children[0], types_formal_params);
-		formal_param(root->children[2], types_formal_params);
-	}
-}
-
-vector<string> original_formal_param_list(Node* root){
-	vector<string> types_formal_params;
-	formal_param_list(root, types_formal_params);
-	// reverse(types_formal_params.begin(), types_formal_params.end());
-	return types_formal_params;
-}
-void typeCheckDfs(Node* );
-void arg_expr(Node* root, vector<string> & type_args){
-	typeCheckDfs(root);
-	// cerr << "Reached here?\n" << root->nodetype << "\n";
-	if(root->nodetype != -1) 
-		type_args.push_back(revMap[root->nodetype]);
-}
-
-void arg_list(Node* root, vector<string> & type_args){
-	for(int i = 0; i < root->children.size(); i++){
-		if(root->children[i]->val == "ArgumentList"){
-			arg_list(root->children[i], type_args);
-		}
-		else{
-			arg_expr(root->children[i], type_args);
-		}
-	}
-}
-
 void method_declarator(Node* root, string type_)
-{	
-	string temp;
-	vector<int> temp_curr_scope = current_scope;
-	int f = 0;
+{
 	for(int i=0;i<root->children.size();i++)
-	{	
-		if((root->children[i])->val=="MethodDeclarator"){
-			method_declarator(root->children[i],type_+"arraytype");
-			return;
-		}
-		if((root->children[i])->val=="Identifier")
-		{
-			temp = ((root->children[i])->children[0])->val;
-			temp = temp.substr(12,temp.length()-1);
-			root->children[i]->children[0]->nodetype = insert_to_map(type_);
-			incr_scope();
-		}
-		if((root->children[i])->val=="FormalParameterList")
-		{
-			f = 1;
-			vector<string> type_formal_params = original_formal_param_list(root->children[i]);
-			insert(temp,temp_curr_scope,yylineno,insert_to_map(type_), type_formal_params);
-		}
-		if(root->children[i]->val =="RRB__)"){
-			current_scope.pop_back();
-			counts[current_scope]--;
-			return;
-		}
-	}
-	if(!f){
-		insert(temp,temp_curr_scope,yylineno,insert_to_map(type_), empty_string_vec);
-	}
-}
+		{	
+			if((root->children[i])->val=="MethodDeclarator"){
+				method_declarator(root->children[i],type_+"arraytype");
+				return;
+			}
+			if((root->children[i])->val=="Identifier")
+			{
+				string temp = ((root->children[i])->children[0])->val;
+				temp = temp.substr(12,temp.length()-1);
+				insert(temp,current_scope,yylineno,typeMap[type_]);
+				incr_scope();
+			}
+			if(root->children[i]->val == "FormalParameterList"){
+				traverse(root->children[i]);
+			}
 
+			if(root->children[i]->val =="RRB__)"){
+				return;
+			}
+		}
+}
 
 void traverse(Node* root)
 {
+	// cerr<<"Reached"<<endl;
 	if(root->val == "Identifier"){
 		string temp = root->children[0]->val;
 		temp=temp.substr(12,temp.length()-1);
-		int index = scope_check(temp,current_scope);
-		if(index == -1){
+		if(!scope_check(temp,current_scope)){
 			cerr << "Error found in Scope Checking\n";
 			exit(0);
 		}
-		root->children[0]->nodetype = sym_table[index].second.type;
 	}
 
 	if(root->val=="FOR__for")
@@ -1356,6 +1325,27 @@ void traverse(Node* root)
 			}
 		}
 		return;
+		// for(int i=0;i<root->children.size();i++)
+		// {	
+		// 	if((root->children[i])->val=="MethodDeclarator"){
+		// 		traverse(root->children[i]);
+		// 		return;
+		// 	}
+		// 	if((root->children[i])->val=="Identifier")
+		// 	{
+		// 		string temp = ((root->children[i])->children[0])->val;
+		// 		temp = temp.substr(12,temp.length()-1);
+		// 		insert(temp,current_scope,yylineno,7);
+		// 		incr_scope();
+		// 	}
+		// 	if(root->children[i]->val == "FormalParameterList"){
+		// 		traverse(root->children[i]);
+		// 	}
+
+		// 	if(root->children[i]->val =="RRB__)"){
+		// 		return;
+		// 	}
+		// }
 	}
 	if(root->val=="ClassDeclaration")
 	{
@@ -1365,9 +1355,7 @@ void traverse(Node* root)
 			{
 				string temp = ((root->children[i])->children[0])->val;
 				temp = temp.substr(12,temp.length()-1);
-				string s = "class";
-				insert(temp,current_scope,yylineno,insert_to_map(s), empty_string_vec);
-				root->children[i]->children[0]->nodetype = insert_to_map(s);
+				insert(temp,current_scope,yylineno,14);
 				incr_scope();
 			}
 			if(root->children[i]->val == "ClassBody"){
@@ -1376,7 +1364,6 @@ void traverse(Node* root)
 		}
 		return;
 	}
-	// to do
 	if(root->val=="ConstructorDeclarator")
 	{
 		for(int i=0;i<root->children.size();i++)
@@ -1385,7 +1372,7 @@ void traverse(Node* root)
 			{
 				string temp = ((root->children[i])->children[0])->val;
 				temp = temp.substr(12,temp.length()-1);
-				insert(temp,current_scope,yylineno,15,empty_string_vec);
+				insert(temp,current_scope,yylineno,15);
 				incr_scope();
 			}
 			if(root->children[i]->val == "FormalParameterList"){
@@ -1399,30 +1386,10 @@ void traverse(Node* root)
 	}
 	if(root->val=="LocalVariableDeclaration")
 	{
-		string type_;
-		if(root->children[0]->val=="Type")
-		{
-			type_ = typefun(root->children[0]);
-			vardeclist(root->children[1], type_);
-		}
-		else if(root->children[0]->val=="VAR__var")
-		{
-			type_ = "VAR";
-			vardeclist(root->children[1], type_);
-		}
-		else
-		{
-			if(root->children[1]->val=="Type")
-			{
-				type_ = typefun(root->children[0]);
-				vardeclist(root->children[2], type_);
-			}
-			else if(root->children[1]->val=="VAR__var")
-			{
-				type_ = "VAR";
-				vardeclist(root->children[2], type_);
-			}
-		}
+		// cerr<<"hello\n";
+		string type_ = typefun(root->children[0]);
+		// cerr<< type_ << endl;
+		vardeclist(root->children[1], type_);
 	}
 	if(root->val=="FieldDeclaration")
 	{
@@ -1434,74 +1401,16 @@ void traverse(Node* root)
 			vardeclist(root->children[1], typefun(root->children[0]));
 		}
 	}
-
-	if(root->val=="MethodInvocation")
+	if(root->val=="FormalParameter")
 	{
-		string temp;
-		if(root->children[0]->children[0]->val=="Identifier")
+		if(root->children[0]->val=="Modifiers")
 		{
-			temp = root->children[0]->children[0]->children[0]->val;
-			temp = temp.substr(12,temp.length()-1);
-		}
-		else
+			vardeclaratorid(root->children[2], typefun(root->children[1])); 
+		}else
 		{
-			temp = root->children[0]->children[2]->children[0]->val;
-			temp = temp.substr(12,temp.length()-1);
+			vardeclaratorid(root->children[1], typefun(root->children[0]));
 		}
-		int index = lookup_scope(temp,current_scope);  //assuming lookup
-		tab_item t = sym_table[index].second;
-		string type__ = revMap[t.type];
-		if(type__[0]!='f')
-		{
-			cerr<<"Calling invalid function"<<endl;
-			exit(0); 
-			// return;
-		}
-		type__ = type__.substr(9,type__.length()-1);
-		root->nodetype = insert_to_map(type__);
-		
-		for(int i = 0; i < root->children.size(); i++){
-			if(root->children[i]->val == "ArgumentList"){
-				// fun for arglist
-				make_ast(root->children[i], root->children[i], 0);
-				revise_ast(root->children[i], root->children[i], 0);
-				vector<string> type_args;
-				arg_list(root->children[i], type_args);
-
-				if(type_args != t.type_args){
-					cerr << "Function arguments dont match\n";
-					exit(0);
-				}
-			}
-		}
-
 	}
-	if(root->val=="ArrayAccess")
-	{
-		string temp;
-		if(root->children[0]->children[0]->val=="Identifier")
-		{
-			temp = root->children[0]->children[0]->children[0]->val;
-			temp = temp.substr(12,temp.length()-1);
-		}
-		else
-		{
-			temp = root->children[0]->children[2]->children[0]->val;
-			temp = temp.substr(12,temp.length()-1);
-		}
-		int index = lookup_scope(temp,current_scope);
-		tab_item t = sym_table[index].second;
-		string type__ =  revMap[t.type];
-		if(type__[0]!='a')
-		{
-			cout<<"Calling invalid array"<<endl;
-			exit(0);
-		}
-		type__ = type__.substr(6,type__.length()-1);
-		root->nodetype = insert_to_map(type__);
-	}
-	//field access remains
-
 	for(auto child:root->children)
 	{
 		traverse(child);
@@ -1514,400 +1423,22 @@ void traverse(Node* root)
 	{
 		hide_scope();
 	}
-	if(root->val=="RRB1")
+	if(root->val=="MethodDeclarator" || root->val=="RRB1")
 	{
 		current_scope.pop_back();
 		counts[current_scope]--;
 	}
-}
-
-set<string> bin_ops = {"EQUALTO","PLUSET","MINUSET","MULTET","DIVET","ANDET","LT","GT","LEQ","GEQ","OR","AND","BITOR","BITAND","POW","EQ","NEQ","LEFTSHIFT","RIGHTSHIFT","THREEGREAT","PLUS","MINUS","MULT","DIVIDE","MODULO"};
-// string trim(string s){
-// 	string temp = "";
-// 	for(auto i:s){
-// 		if(i == '_') break;
-// 		temp.push_back(i);
-// 	}
-// 	return temp;
-// }
-
-int semantic_checking(int type1, int type2, string op){
-	if( op == "EQUALTO" )
-		{
-			if(revMap[type1] == "integer"){
-				if(revMap[type2] == "integer" ){
-					return typeMap["integer"];
-				}
-				cerr << "Type error\n";
-				return -1;
-			}
-			if(revMap[type1] == "float"){
-				if(revMap[type2] == "integer" || revMap[type2] == "float"){
-					return typeMap["float"];
-				}
-				cerr << "Type error\n";
-				return -1;
-			}
-			if(revMap[type1] == "boolean"){
-				if(revMap[type2] == "boolean"){
-					return typeMap["boolean"];
-				}
-				cerr << "Type error\n";
-				return -1;
-			}
-			if(revMap[type1] == "VAR"){
-				return type2;
-			}
-		}
-	if( op == "PLUS")
-		{
-			if(revMap[type1]=="boolean"||revMap[type2]=="boolean")
-			{
-				cerr << "TypeError\n";
-				return -1;
-			}
-			if(revMap[type1]=="VAR"||revMap[type1]=="VAR")
-			{
-				return typeMap["VAR"];
-			}
-			if(revMap[type1]=="string"||revMap[type2]=="string")
-			{
-				return typeMap["string"];
-			}
-			if(revMap[type1]=="float"||revMap[type2]=="float")
-			{
-				return typeMap["float"];
-			}
-			return typeMap["integer"];
-		}
-	if( op == "MINUS")
-		{
-			if(revMap[type1] == "float"){
-				if(revMap[type2] == "integer" || revMap[type2] == "float"){
-					return typeMap["float"];
-				}
-				return -1;
-			}
-			if(revMap[type1] == "integer"){
-				if(revMap[type2] == "integer"){
-					return typeMap["integer"];
-				}
-				if(revMap[type2] == "float"){
-					return typeMap["float"];
-				}
-				return -1;
-			}
-			if(revMap[type1] == "boolean" || revMap[type1] == "string" || revMap[type1] == "VAR"){
-				return -1;
-			}
-		}
-	if( op == "MULT")
-		{
-			if(revMap[type1] == "float"){
-				if(revMap[type2] == "integer" || revMap[type2] == "float"){
-					return typeMap["float"];
-				}
-				return -1;
-			}
-			if(revMap[type1] == "integer"){
-				if(revMap[type2] == "integer"){
-					return typeMap["integer"];
-				}
-				if(revMap[type2] == "float"){
-					return typeMap["float"];
-				}
-				return -1;
-			}
-			if(revMap[type1] == "boolean" || revMap[type1] == "string" || revMap[type1] == "VAR"){
-				return -1;
-			}
-		}
-	if( op == "DIVIDE")
-		{
-			if(revMap[type1] == "float"){
-				if(revMap[type2] == "integer" || revMap[type2] == "float"){
-					return typeMap["float"];
-				}
-				return -1;
-			}
-			if(revMap[type1] == "integer"){
-				if(revMap[type2] == "integer"){
-					return typeMap["integer"];
-				}
-				if(revMap[type2] == "float"){
-					return typeMap["float"];
-				}
-				return -1;
-			}
-			if(revMap[type1] == "boolean" || revMap[type1] == "string" || revMap[type1] == "VAR"){
-				return -1;
-			}
-		}
-	if( op == "MODULO")
-		{
-			if(revMap[type1] == "float"){
-				if(revMap[type2] == "integer" || revMap[type2] == "float"){
-					return typeMap["float"];
-				}
-				return -1;
-			}
-			if(revMap[type1] == "integer"){
-				if(revMap[type2] == "integer"){
-					return typeMap["integer"];
-				}
-				if(revMap[type2] == "float"){
-					return typeMap["float"];
-				}
-				return -1;
-			}
-			if(revMap[type1] == "boolean" || revMap[type1] == "string" || revMap[type1] == "VAR"){
-				return -1;
-			}
-		}
-	if( op == "LEFTSHIFT")
-		{
-			if(revMap[type1] == "integer"){
-				if(revMap[type2] == "integer"){
-					return typeMap["integer"];
-				}
-				return -1;
-			}
-			return -1;
-		}
-	if( op == "RIGHTSHIFT")
-		{
-			if(revMap[type1] == "integer"){
-				if(revMap[type2] == "integer"){
-					return typeMap["integer"];
-				}
-				return -1;
-			}
-			return -1;
-		}
-	if( op == "THREEGREAT")
-		{
-			if(revMap[type1] == "integer"){
-				if(revMap[type2] == "integer"){
-					return typeMap["integer"];
-				}
-				return -1;
-			}
-			return -1;
-		}
-	if( op == "EQ")
-		{
-			if(type1 == type2 || revMap[type1] == "VAR" || revMap[type2] == "VAR"){
-				return typeMap["boolean"];
-			}
-			if((revMap[type1] == "float" && revMap[type2] == "integer") || (revMap[type2] == "float" && revMap[type1] == "integer")){
-				return typeMap["boolean"];
-			}
-			return -1;
-		}
-	if( op == "NEQ")
-		{
-			if(type1 == type2 || revMap[type1] == "VAR" || revMap[type2] == "VAR"){
-				return typeMap["boolean"];
-			}
-			if((revMap[type1] == "float" && revMap[type2] == "integer") || (revMap[type2] == "float" && revMap[type1] == "integer")){
-				return typeMap["boolean"];
-			}
-			return -1;
-		}
-	if( op == "BITAND")
-		{
-			if(revMap[type1] == "integer"){
-				if(revMap[type2] == "integer"){
-					return typeMap["integer"];
-				}
-				return -1;
-			}
-			return -1;
-		}
-	if( op == "BITOR")
-		{
-			if(revMap[type1] == "integer"){
-				if(revMap[type2] == "integer"){
-					return typeMap["integer"];
-				}
-				return -1;
-			}
-			return -1;
-		}
-	if( op == "POW")
-		{
-			if(revMap[type1] == "integer"){
-				if(revMap[type2] == "integer"){
-					return typeMap["integer"];
-				}
-				return -1;
-			}
-			return -1;
-		}
-	if( op == "AND")
-		{
-			if(revMap[type1]=="boolean"&&revMap[type2]=="boolean")
-			{
-				return typeMap["boolean"];
-			}
-			return -1;
-		}
-	if( op == "OR")
-		{
-			if(revMap[type1]=="boolean"&&revMap[type2]=="boolean")
-			{
-				return typeMap["boolean"];
-			}
-			return -1;
-		}
-	if( op == "GT")
-		{
-			if(type1 == type2 ||revMap[type1] == "VAR" || revMap[type2] == "VAR"||(revMap[type2]=="float" && revMap[type1]=="integer")||(revMap[type1]=="float" && revMap[type2]=="integer") )
-			{
-				return typeMap["boolean"];
-			}
-			return -1;
-		}
-	if( op == "LT")
-		{
-			if(type1 == type2 ||revMap[type1] == "VAR" || revMap[type2] == "VAR"||(revMap[type2]=="float" && revMap[type1]=="integer")||(revMap[type1]=="float" && revMap[type2]=="integer") )
-			{
-				return typeMap["boolean"];
-			}
-			return -1;
-		}
-	if( op == "GEQ")
-		{
-			if(type1 == type2 ||revMap[type1] == "VAR" || revMap[type2] == "VAR"||(revMap[type2]=="float" && revMap[type1]=="integer")||(revMap[type1]=="float" && revMap[type2]=="integer") )
-			{
-				return typeMap["boolean"];
-			}
-			return -1;
-		}
-	if( op == "LEQ")
-		{
-			if(type1 == type2 ||revMap[type1] == "VAR" || revMap[type2] == "VAR"||(revMap[type2]=="float" && revMap[type1]=="integer")||(revMap[type1]=="float" && revMap[type2]=="integer") )
-			{
-				return typeMap["boolean"];
-			}
-			return -1;
-		}
-	if( op == "PLUSET")
-		{
-			if(revMap[type1] == "integer"){
-				if(revMap[type2] == "integer"){
-					return typeMap["integer"];
-				}
-				if(revMap[type2] == "float"){
-					return typeMap["float"];
-				}
-				return -1;
-			}
-			if(revMap[type1] == "float"){
-				if(revMap[type2] == "integer" || revMap[type2] == "float"){
-					return typeMap["float"];
-				}
-				return -1;
-			}
-			if(revMap[type1] == "VAR"){
-				return typeMap["VAR"];
-			}
-			return -1;
-		}
-	if( op == "MINUSET")
-		{
-			if(revMap[type1] == "integer"){
-				if(revMap[type2] == "integer"){
-					return typeMap["integer"];
-				}
-				if(revMap[type2] == "float"){
-					return typeMap["float"];
-				}
-				return -1;
-			}
-			if(revMap[type1] == "float"){
-				if(revMap[type2] == "integer" || revMap[type2] == "float"){
-					return typeMap["float"];
-				}
-				return -1;
-			}
-			return -1;
-		}
-	if( op == "MULTET")
-		{
-			if(revMap[type1] == "integer"){
-				if(revMap[type2] == "integer"){
-					return typeMap["integer"];
-				}
-				if(revMap[type2] == "float"){
-					return typeMap["float"];
-				}
-				return -1;
-			}
-			if(revMap[type1] == "float"){
-				if(revMap[type2] == "integer" || revMap[type2] == "float"){
-					return typeMap["float"];
-				}
-				return -1;
-			}
-			return -1;
-		}
-	if( op == "DIVET")
-		{
-			if(revMap[type1] == "integer"){
-				if(revMap[type2] == "integer"){
-					return typeMap["integer"];
-				}
-				if(revMap[type2] == "float"){
-					return typeMap["float"];
-				}
-				return -1;
-			}
-			if(revMap[type1] == "float"){
-				if(revMap[type2] == "integer" || revMap[type2] == "float"){
-					return typeMap["float"];
-				}
-				return -1;
-			}
-			return -1;
-		}
-	if( op == "ANDET")
-		{
-			if(revMap[type1] == "integer"){
-				if(revMap[type2] == "integer"){
-					return typeMap["integer"];
-				}
-				return -1;
-			}
-			return -1;
-		}
-	return -1;
-}	
-
-int typeCheck(Node* root){
-	if(root->nodetype!=-1){
-		return root->nodetype;
-	}
-	int type1 = typeCheck(root->children[0]);
-	int type2 = typeCheck(root->children[1]);
-	int res = semantic_checking(type1, type2, trim(root->val));
-	if(res == -1){
-		cerr<<"TypeError at line number: " << root->lineno << "\n";
-		exit(0);
-		// yyerror("Error");
-	}
-	
-	return root->nodetype=res;
-}
-
-void typeCheckDfs(Node* root){
-	if(bin_ops.find(trim(root->val))!=bin_ops.end()){
-		typeCheck(root);
-		return;
-	}
-	for(auto child:root->children){
-		typeCheckDfs(child);
-	}
+	// if(root->val=="BasicForStatement" || root->val=="BasicForStatementNoShortIf"){
+	// 	for(int i=0;i<root->children.size();i++)
+	// 	{
+	// 		if((root->children[i])->val=="RRB__)")
+	// 		{
+	// 			cerr << "REACHED HERE\n";
+	// 			current_scope.pop_back();
+	// 			counts[current_scope]--;
+	// 		}
+	// 	}
+	// }
 }
 
 void fill_parent(Node* root){
@@ -2285,26 +1816,9 @@ void gen_3ac(Node* root){
 	}
 }
 
-void init_map(){
-	typeMap["VAR"] = 1;
-	revMap[1] = "VAR";
-
-	typeMap["integer"] = 2;
-	revMap[2] = "integer";
-
-	typeMap["float"] = 3;
-	revMap[3] = "float";
-
-	typeMap["boolean"] = 4;
-	revMap[4] = "boolean";
-
-	typeMap["string"] = 5;
-	revMap[5] = "string";
-}
-
 int main(int argc, char* argv[]){
     try{
-		init_map();
+		fillMap();
 		fill_sizemap();
 		out3ac.open("3ac.txt");
 		string inp = argv[1];
@@ -2312,8 +1826,17 @@ int main(int argc, char* argv[]){
         freopen(inp.c_str(), "r", stdin);
         freopen(outp.c_str(), "w", stdout);
         yyparse();
-		traverse(root);
-		table_dump();
+		// traverse(root);
+		// for(auto it : sym_table)
+		// {
+		// 	cout<<"entry: "<<it.first<<endl;
+		// 	tab_item t = it.second;
+		// 	vector<int> temp = t.scopes.begin()->first;
+		// 	cout<<"scope:";
+		// 	for(auto i: temp) cout << i << " ";
+		// 	cout << endl;
+		// 	cout<<"type:"<<t.scopes.begin()->second<<endl;
+		// }
         cout<<"strict digraph {\n";
         make_ast(root, root, 0);
         revise_ast(root, root, 0);
@@ -2321,7 +1844,6 @@ int main(int argc, char* argv[]){
 		gen_3ac(root);
         dfs(root);
         cout<<"}\n";
-		typeCheckDfs(root);
     }catch (...){
         cerr << "Compilation Error\n";
     }
