@@ -58,7 +58,7 @@ void print(vector<string> temp){
 	cerr << endl;
 }
 Node* root;
-
+int num_classes_minus_one = 0;
 vector<Node *> emp;
 vector<Node *> vec;
 vector<string> empty_string_vec;
@@ -1392,13 +1392,20 @@ void traverse(Node* root)
 		// 	for(auto i:current_scope) cerr << i << " ";
 		// 	cerr << endl;
 		// }
-		int index = scope_check(temp,current_scope);
-		if(index == -1){
-			cerr << "Error found in Scope Checking at line number" << root->lineno << "\n";
-			exit(0);
+		int temp_index = lookup(temp);
+		if(sym_table[temp_index].second.scope.size()!=1)
+		{
+			int index = scope_check(temp,current_scope);
+			if(index == -1){
+				cerr << "Error found in Scope Checking at line number" << root->lineno << "\n";
+				exit(0);
+			}
+			root->children[0]->nodetype = sym_table[index].second.type;
+			root->nodetype = sym_table[index].second.type;
+		}else{
+			root->children[0]->nodetype = typeMap["class"];
+			root->nodetype = typeMap["class"];
 		}
-		root->children[0]->nodetype = sym_table[index].second.type;
-		root->nodetype = sym_table[index].second.type;
 	}
 
 	if(root->val=="FOR__for")
@@ -1455,6 +1462,8 @@ void traverse(Node* root)
 				traverse(root->children[i]);
 			}
 		}
+		current_scope.pop_back();
+		current_scope[0]++;
 		return;
 	}
 	if(root->val=="ConstructorBody"){
@@ -1477,7 +1486,7 @@ void traverse(Node* root)
 		{
 			type_ = typefun(root->children[0]);
 			string temp = type_.substr(0,5);
-			if(temp=="class_")
+			if(temp=="class")
 			{
 				string s = type_.substr(6,type_.length()-1);
 				int flag=0;
@@ -1531,32 +1540,81 @@ void traverse(Node* root)
 	{
 		string obj;
 		string temp;
+
+		tab_item class_obj_t, t;
 		if(root->children[0]->children[0]->val=="Identifier")
 		{
 			temp = root->children[0]->children[0]->children[0]->val;
 			temp = temp.substr(12,temp.length()-1);
+			int index = lookup_scope(temp,current_scope);  //assuming lookup
+			if(index==-1)
+			{
+				// table_dump();
+				cerr << "Calling undeclared function at line number: "<< root->lineno <<endl;
+				exit(0);
+			}
+			t = sym_table[index].second;
+			string type__ = revMap[t.type];
+			if(!(type__[0]=='f' && type__[1]=='u'))
+			{
+				cerr<<"Calling invalid function at line number: " << root->lineno <<endl;
+				exit(0); 
+				// return;
+			}
+			type__ = type__.substr(9,type__.length()-1);
+			root->nodetype = insert_to_map(type__);
 		}
 		else
-		{	obj = root->children[0]->children[0]->children[0]->val;
+		{	
+			obj = root->children[0]->children[0]->children[0]->children[0]->val;
 			temp = root->children[0]->children[2]->children[0]->val;
+			obj = obj.substr(12,obj.length()-1);
 			temp = temp.substr(12,temp.length()-1);
+			int ind = lookup_scope(obj, current_scope);
+			if(ind==-1)
+			{
+				cerr << "No such object exisits"<< endl;
+				cerr << "Line number: " <<root->lineno<<endl;
+				exit(0);
+			}
+			class_obj_t = sym_table[ind].second;
+			string s = revMap[class_obj_t.type].substr(0,5);
+
+			if(s!="class")
+			{
+				cerr << "The called object is not of a class" << endl;
+				cerr << "Line number: " <<root->lineno<<endl;
+				exit(0);
+			}
+			
+			string class_name = revMap[class_obj_t.type].substr(6,revMap[class_obj_t.type].length()-1);
+			int indexx = lookup(class_name);
+			tab_item class_t = sym_table[indexx].second; 
+
+			int flag2 = -1;
+			for(int i = 0; i < sym_table.size(); i++){
+				if(sym_table[i].first == temp && is_prefix(class_t.scope, sym_table[i].second.scope)){
+					flag2 = i;
+					break;
+				}
+			}
+			if(flag2==-1){
+				cerr << "The called method is not a member of the class" << endl;
+				cerr << "Line number: " << root->lineno << endl;
+				exit(0);
+			}
+
+			t = sym_table[flag2].second;
+			string type__ = revMap[t.type];
+			if(!(type__[0]=='f' && type__[1]=='u'))
+			{
+				cerr<<"Calling invalid function at line number: " << root->lineno <<endl;
+				exit(0); 
+				// return;
+			}
+			type__ = type__.substr(9,type__.length()-1);
+			root->nodetype = insert_to_map(type__);
 		}
-		int index = lookup_scope(temp,current_scope);  //assuming lookup
-		if(index==-1)
-		{
-			cerr << "Calling undeclared function at line number: "<< root->lineno <<endl;
-			exit(0);
-		}
-		tab_item t = sym_table[index].second;
-		string type__ = revMap[t.type];
-		if(!(type__[0]=='f' && type__[1]=='u'))
-		{
-			cerr<<"Calling invalid function at line number: " << root->lineno <<endl;
-			exit(0); 
-			// return;
-		}
-		type__ = type__.substr(9,type__.length()-1);
-		root->nodetype = insert_to_map(type__);
 		
 		int flag1 = 0;
 		for(int i = 0; i < root->children.size(); i++){
@@ -1582,6 +1640,7 @@ void traverse(Node* root)
 				exit(0);
 			}
 		}
+		return;
 	}
 	if(root->val=="ArrayAccess")
 	{
@@ -1659,10 +1718,6 @@ void traverse(Node* root)
 	for(auto child:root->children)
 	{
 		traverse(child);
-	}
-	if(root->val=="ClassDeclaration"||root->val=="ConstructorDeclaration")
-	{
-		hide_scope();
 	}
 	if(root->val=="InstanceInitializer"||root->val=="StaticInitializer"||root->val=="Block")
 	{
