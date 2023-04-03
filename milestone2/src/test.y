@@ -1210,6 +1210,13 @@ string typefun(Node* root){
 		if(root->children[0]->children[0]->val == "ArrayType"){
 			return "array_"+ primitiveTypefun(root->children[0]->children[0]->children[0]);
 		}
+		else  //ClassType
+		{
+			string temp = root->children[0]->children[0]->children[0]->children[0]->children[0]->val;
+			temp = temp.substr(12, temp.length()-1);
+			return "class_" + temp;
+		}
+
 	}
 	return "";
 }
@@ -1222,6 +1229,7 @@ void formal_param(Node* root, vector<string> &types_formal_params){
 		vardeclaratorid(root->children[2], type_param); 
 	}else
 	{
+		// cerr << "HI6\n";
 		string type_param = typefun(root->children[0]);
 		types_formal_params.push_back(type_param);
 		vardeclaratorid(root->children[1], type_param);
@@ -1230,6 +1238,7 @@ void formal_param(Node* root, vector<string> &types_formal_params){
 
 void formal_param_list(Node* root, vector<string> &types_formal_params){
 	if(root->children[0]->val == "FormalParameter"){
+		// cerr << "HI5\n";
 		formal_param(root->children[0], types_formal_params);
 	}else{
 		formal_param_list(root->children[0], types_formal_params);
@@ -1239,6 +1248,7 @@ void formal_param_list(Node* root, vector<string> &types_formal_params){
 
 vector<string> original_formal_param_list(Node* root){
 	vector<string> types_formal_params;
+	// cerr << "HI4\n";
 	formal_param_list(root, types_formal_params);
 	// reverse(types_formal_params.begin(), types_formal_params.end());
 	return types_formal_params;
@@ -1272,7 +1282,18 @@ void method_declarator(Node* root, string type_)
 {	
 	string temp;
 	vector<int> temp_curr_scope = current_scope;
-	int f = 0;
+
+	vector<string> type_formal_params;
+	for(int i=0;i<root->children.size();i++)
+	{
+		if((root->children[i])->val=="FormalParameterList")
+		{
+			incr_scope();
+			type_formal_params = original_formal_param_list(root->children[i]);
+			current_scope.pop_back();
+			counts[current_scope]--;
+		}
+	}
 	for(int i=0;i<root->children.size();i++)
 	{	
 		if((root->children[i])->val=="MethodDeclarator"){
@@ -1284,22 +1305,8 @@ void method_declarator(Node* root, string type_)
 			temp = ((root->children[i])->children[0])->val;
 			temp = temp.substr(12,temp.length()-1);
 			root->children[i]->children[0]->nodetype = insert_to_map(type_);
-			incr_scope();
+			insert(temp, current_scope,root->lineno,insert_to_map(type_), type_formal_params);
 		}
-		if((root->children[i])->val=="FormalParameterList")
-		{
-			f = 1;
-			vector<string> type_formal_params = original_formal_param_list(root->children[i]);
-			insert(temp,temp_curr_scope,root->lineno,insert_to_map(type_), type_formal_params);
-		}
-		if(root->children[i]->val =="RRB__)"){
-			current_scope.pop_back();
-			counts[current_scope]--;
-			return;
-		}
-	}
-	if(!f){
-		insert(temp,temp_curr_scope,root->lineno,insert_to_map(type_), empty_string_vec);
 	}
 }
 
@@ -1330,10 +1337,49 @@ void array_access_type_check(Node* root, vector<string> & type_args){
 
 	typeCheck(root->children[2]);
 	if(revMap[root->children[2]->nodetype] != "integer"){
-		cerr << "Array index should be an integer\n";
+		cerr << "Array index should be an integer\n" << "Error found at line number: " << root->children[2]->lineno << endl ;
 		exit(0);
 	}
 	type_args.push_back("integer");
+}
+
+void constructor_declarator(Node* root){
+	vector<string> type_formal_params;
+	for(int i=0;i<root->children.size();i++)
+	{
+		if((root->children[i])->val=="FormalParameterList")
+		{
+			incr_scope();
+			// cerr << "HI3\n";
+			type_formal_params = original_formal_param_list(root->children[i]);
+			current_scope.pop_back();
+			counts[current_scope]--;
+		}
+	}
+	string temp;
+	for(int i=0;i<root->children.size();i++)
+	{	
+		if((root->children[i])->val=="Identifier")
+		{
+			temp = ((root->children[i])->children[0])->val;
+			temp = temp.substr(12,temp.length()-1);
+			string s1 = "class";
+			root->children[i]->children[0]->nodetype = insert_to_map(s1);
+			// insert(temp, current_scope,root->lineno,insert_to_map(type_), type_formal_params);
+			int flag = 0;
+			for(int i = 0; i < sym_table.size(); i++){
+				if(sym_table[i].first==temp && revMap[sym_table[i].second.type] == "class"){
+					flag = 1;
+					sym_table[i].second.type_args = type_formal_params;
+					break;
+				}
+			}
+			if(!flag){
+				cerr << "Trying to declare a constructor that does not match the class name at line number: " << root->lineno << endl;
+				exit(0);
+			}
+		}
+	}
 }
 
 void traverse(Node* root)
@@ -1341,9 +1387,14 @@ void traverse(Node* root)
 	if(root->val == "Identifier"){
 		string temp = root->children[0]->val;
 		temp=temp.substr(12,temp.length()-1);
+		// if(temp == "j"){
+		// 	table_dump();
+		// 	for(auto i:current_scope) cerr << i << " ";
+		// 	cerr << endl;
+		// }
 		int index = scope_check(temp,current_scope);
 		if(index == -1){
-			cerr << "Error found in Scope Checking\n";
+			cerr << "Error found in Scope Checking at line number" << root->lineno << "\n";
 			exit(0);
 		}
 		root->children[0]->nodetype = sym_table[index].second.type;
@@ -1354,7 +1405,9 @@ void traverse(Node* root)
 	{
 		incr_scope();
 	}
-
+	if(root->val == "MethodBody" && root->children[0]->val == "SEMICOLON__;"){
+		counts[current_scope]++;
+	}
 	if(root->val=="InstanceInitializer"||root->val=="StaticInitializer"||root->val=="Block")
 	{
 		incr_scope();
@@ -1404,26 +1457,18 @@ void traverse(Node* root)
 		}
 		return;
 	}
-	// to do
-	if(root->val=="ConstructorDeclarator")
-	{
-		for(int i=0;i<root->children.size();i++)
-		{	
-			if((root->children[i])->val=="Identifier")
-			{
-				string temp = ((root->children[i])->children[0])->val;
-				temp = temp.substr(12,temp.length()-1);
-				insert(temp,current_scope,root->children[i]->lineno,15,empty_string_vec);
-				incr_scope();
-			}
-			if(root->children[i]->val == "FormalParameterList"){
-				traverse(root->children[i]);
-			}
-
-			if(root->children[i]->val =="RRB__)"){
-				return;
+	if(root->val=="ConstructorBody"){
+		incr_scope();
+	}
+	if(root->val=="ConstructorDeclaration"){
+		// cerr << "HI1\n";
+		for(int i = 0; i < root->children.size(); i++){
+			if(root->children[i]->val == "ConstructorDeclarator"){
+				// cerr << "HI2\n";
+				constructor_declarator(root->children[i]);
 			}
 		}
+		return;
 	}
 	if(root->val=="LocalVariableDeclaration")
 	{
@@ -1431,6 +1476,25 @@ void traverse(Node* root)
 		if(root->children[0]->val=="Type")
 		{
 			type_ = typefun(root->children[0]);
+			string temp = type_.substr(0,5);
+			if(temp=="class_")
+			{
+				string s = type_.substr(6,type_.length()-1);
+				int flag=0;
+				for(auto it : sym_table)
+				{
+					if(it.first==s && revMap[it.second.type]=="class")
+					{
+						flag=1;
+						break;
+					}
+				}
+				if(!flag)
+				{
+					cerr << "Trying to create object of non-existent class at line number: " << root->lineno <<endl;
+					exit(0);
+				}
+			}
 			vardeclist(root->children[1], type_);
 		}
 		else if(root->children[0]->val=="VAR__var")
@@ -1465,6 +1529,7 @@ void traverse(Node* root)
 
 	if(root->val=="MethodInvocation")
 	{
+		string obj;
 		string temp;
 		if(root->children[0]->children[0]->val=="Identifier")
 		{
@@ -1472,24 +1537,31 @@ void traverse(Node* root)
 			temp = temp.substr(12,temp.length()-1);
 		}
 		else
-		{
+		{	obj = root->children[0]->children[0]->children[0]->val;
 			temp = root->children[0]->children[2]->children[0]->val;
 			temp = temp.substr(12,temp.length()-1);
 		}
 		int index = lookup_scope(temp,current_scope);  //assuming lookup
+		if(index==-1)
+		{
+			cerr << "Calling undeclared function at line number: "<< root->lineno <<endl;
+			exit(0);
+		}
 		tab_item t = sym_table[index].second;
 		string type__ = revMap[t.type];
-		if(type__[0]!='f')
+		if(!(type__[0]=='f' && type__[1]=='u'))
 		{
-			cerr<<"Calling invalid function"<<endl;
+			cerr<<"Calling invalid function at line number: " << root->lineno <<endl;
 			exit(0); 
 			// return;
 		}
 		type__ = type__.substr(9,type__.length()-1);
 		root->nodetype = insert_to_map(type__);
 		
+		int flag1 = 0;
 		for(int i = 0; i < root->children.size(); i++){
 			if(root->children[i]->val == "ArgumentList"){
+				flag1 = 1;
 				// fun for arglist
 				make_ast(root->children[i], root->children[i], 0);
 				revise_ast(root->children[i], root->children[i], 0);
@@ -1499,12 +1571,17 @@ void traverse(Node* root)
 				if(type_args != t.type_args){
 					// print(type_args);
 					// print(t.type_args);
-					cerr << "Function arguments dont match\n";
+					cerr << "Function arguments dont match\n" << "Error found at line number: " << root->children[i]->lineno << "\n";
 					exit(0);
 				}
 			}
 		}
-
+		if(!flag1){
+			if(t.type_args.size() != 0){
+				cerr << "Function arguments dont match\n" << "Error found at line number: " << root->lineno << "\n";
+				exit(0);
+			}
+		}
 	}
 	if(root->val=="ArrayAccess")
 	{
@@ -1523,13 +1600,59 @@ void traverse(Node* root)
 		for(auto i:type_args){
 			if(type__[0]!='a')
 			{
-				cerr<<"Accessing more dimensions"<<endl;
+				cerr<<"Accessing more dimensions at line number: " << root->lineno <<endl;
 				exit(0);
 			}
 			type__ = type__.substr(6,type__.length()-1);
 		}
 		root->nodetype = insert_to_map(type__);
 		return;
+	}
+	if(root->val == "UnqualifiedClassInstanceCreationExpression"){
+		string type__;
+		type__ = root->children[1]->children[0]->children[0]->children[0]->val;
+		type__ = type__.substr(12, type__.length()-1);
+
+		int flag = -1;
+		for(int i = 0; i < sym_table.size(); i++){
+			pair<string, tab_item> it = sym_table[i];
+			if(it.first == type__ && revMap[it.second.type] == "class"){
+				flag = i;
+				break;
+			}
+		}
+		if(flag == -1){
+			cerr << "Creating an instance of a non-existent class at line number: " << root->lineno << endl;
+			exit(0);
+		}
+		type__ = "class_" + type__;
+		root->nodetype = insert_to_map(type__);
+
+		tab_item t = sym_table[flag].second;
+		int flag1 = 0;
+		for(int i = 0; i < root->children.size(); i++){
+			if(root->children[i]->val == "ArgumentList"){
+				flag1 = 1;
+				// fun for arglist
+				make_ast(root->children[i], root->children[i], 0);
+				revise_ast(root->children[i], root->children[i], 0);
+				vector<string> type_args;
+				arg_list(root->children[i], type_args);
+				// cerr << root->children[i]->val << endl;
+				if(type_args != t.type_args){
+					// print(type_args);
+					// print(t.type_args);
+					cerr << "Class constructor arguments dont match\n" << "Error found at line number: " << root->children[i]->lineno << "\n";
+					exit(0);
+				}
+			}
+		}
+		if(!flag1){
+			if(t.type_args.size() != 0){
+				cerr << "Class constructor arguments dont match\n" << "Error found at line number: " << root->lineno << "\n";
+				exit(0);
+			}
+		}	
 	}
 	//field access remains
 
@@ -1550,11 +1673,17 @@ void traverse(Node* root)
 		current_scope.pop_back();
 		counts[current_scope]--;
 	}
+	if(root->val=="ConstructorBody"){
+		hide_scope();
+	}
 }
 
 int semantic_checking(int type1, int type2, string op){
 	if( op == "EQUALTO" )
-		{
+		{	
+			if(type1 == type2){
+				return type1;
+			}
 			if(revMap[type1] == "integer"){
 				if(revMap[type2] == "integer" ){
 					return typeMap["integer"];
@@ -2450,11 +2579,12 @@ int main(int argc, char* argv[]){
         cout<<"strict digraph {\n";
         make_ast(root, root, 0);
         revise_ast(root, root, 0);
-		fill_parent(root);
-		gen_3ac(root);
+		// fill_parent(root);
+		// gen_3ac(root);
         dfs(root);
         cout<<"}\n";
 		typeCheckDfs(root);
+		change_scope();
 		main_create();
 		main_dump();
     }catch (...){

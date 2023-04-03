@@ -41,8 +41,7 @@ void insert(string name, vector<int> &scope, int lineno, int type, vector<string
 
     for(int i = 0; i < sym_table.size(); i++){
         if(sym_table[i].first == name && sym_table[i].second.scope == scope){
-            cerr<<name<<" ";
-            cerr<<"Redeclaration error"<<endl;
+            cerr<<"Redeclaration error at line number: " << lineno <<endl;
             exit(0);
         }
     }
@@ -64,7 +63,7 @@ int scope_check(string name, vector<int> &scope)
             }
         }
     }
-    cerr << "Variable not declared to be used in this scope\n";
+    cerr << name <<" Variable not declared to be used in this scope\n";
     return -1;
 }
 
