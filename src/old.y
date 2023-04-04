@@ -6,42 +6,14 @@ extern int yylineno;
 
 map<string, int> typeMap;
 map<int, string> revMap;
-map<int, string> revOffMap;
 
 int insert_to_map(string & s){
-	if(s=="byte" || s=="int" || s=="long" || s=="short" || s=="char"){
-		if(typeMap.find(s)==typeMap.end()){
-			typeMap[s]=typeMap.size()+1;
-			revOffMap[typeMap[s]] = s;
-			revMap[typeMap[s]]="int";
-		}
-	}
-	else if(s=="float" || s=="double")
-	{
-		if(typeMap.find(s)==typeMap.end()){
-			typeMap[s]=typeMap.size()+1;
-			revOffMap[typeMap[s]] = s;
-			revMap[typeMap[s]]="float";
-		}
-	}
-	else
-	{
-		if(typeMap.find(s)==typeMap.end()){
-			typeMap[s]=typeMap.size()+1;
-			revOffMap[typeMap[s]] = s;
-			revMap[typeMap[s]]=s;
-		}
+	if(typeMap.find(s)==typeMap.end()){
+		typeMap[s]=typeMap.size()+1;
+		revMap[typeMap[s]]=s;
 	}
 	return typeMap[s];
 }
-// int insert_to_map(string & s){
-// 	if(typeMap.find(s)==typeMap.end()){
-// 		typeMap[s]=typeMap.size()+1;
-// 		revOffMap[typeMap[s]] = s;
-// 		revMap[typeMap[s]]=s;
-// 	}
-// 	return typeMap[s];
-// }
 
 int yyerror(const char* s)
 {
@@ -86,7 +58,7 @@ void print(vector<string> temp){
 	cerr << endl;
 }
 Node* root;
-int num_classes_minus_one = 0;
+
 vector<Node *> emp;
 vector<Node *> vec;
 vector<string> empty_string_vec;
@@ -351,11 +323,11 @@ Identifier:
 Literal:
 	BOOL_LITERAL									{vec = {createnode("BOOL_LITERAL__" + *$1 , emp)}; vec[0]->nodetype = typeMap["boolean"]; $$ = createnode("Literal", vec);}				
 |	NULL_LITERAL									{vec = {createnode("NULL_LITERAL__" + *$1 , emp)}; $$ = createnode("Literal", vec);}
-|	INT_LITERAL										{vec = {createnode("INT_LITERAL__" + *$1 , emp)}; vec[0]->nodetype = typeMap["int"]; $$ = createnode("Literal", vec);}
+|	INT_LITERAL										{vec = {createnode("INT_LITERAL__" + *$1 , emp)}; vec[0]->nodetype = typeMap["integer"]; $$ = createnode("Literal", vec);}
 |	FLOAT_LITERAL									{vec = {createnode("FLOAT_LITERAL__" + *$1 , emp)}; vec[0]->nodetype = typeMap["float"]; $$ = createnode("Literal", vec);}
 |	STRING_LITERAL									{vec = {createnode("STRING_LITERAL__" + *$1 , emp)}; vec[0]->nodetype = typeMap["string"]; $$ = createnode("Literal", vec);}
 |	TEXTBLOCK_LITERAL								{vec = {createnode("TEXTBLOCK_LITERAL__" + *$1 , emp)}; vec[0]->nodetype = typeMap["VAR"]; $$ = createnode("Literal", vec);}
-|	CHAR_LITERAL									{vec = {createnode("CHAR_LITERAL__" + *$1 , emp)}; vec[0]->nodetype = typeMap["int"]; $$ = createnode("Literal", vec);}
+|	CHAR_LITERAL									{vec = {createnode("CHAR_LITERAL__" + *$1 , emp)}; vec[0]->nodetype = typeMap["integer"]; $$ = createnode("Literal", vec);}
 	;
 
 IntegralType:
@@ -1127,23 +1099,6 @@ set<char> escapes = {'\a', '\b', '\f', '\n', '\r', '\t', '\v', '\'', '\"', '\?',
 
 string trim(string & );
 
-
-map<string, vector<pair<string, tab_item> > > main_table;
-map<string, int> type_sizes;
-
-void filltypes()
-{
-	type_sizes["byte"] = 1;
-	type_sizes["short"] = 2;
-	type_sizes["int"] = 4;
-	type_sizes["long"] = 8;
-	type_sizes["float"] = 4;
-	type_sizes["double"] = 8;
-	type_sizes["boolean"] = 1;
-	type_sizes["char"] = 2;
-	type_sizes["class"] = 16;
-}
-
 void dfs(Node* root){
     cout<<"\t"<<(ll)root<<"[label=\"";
     for(char c:root->val){
@@ -1240,13 +1195,9 @@ void vardeclist(Node* root, string type_)
 
 string primitiveTypefun(Node* root){
 	if(root->children[0]->val=="IntegralType"){
-		string temp = root->children[0]->children[0]->val;
-		return temp.substr(14,temp.length()-1);
-		// return "int";
+		return "integer";
 	}else if(root->children[0]->val=="FloatingPointType"){
-		string temp = root->children[0]->children[0]->val;
-		return temp.substr(19,temp.length()-1);
-		// return "float";
+		return "float";
 	}else{
 		return "boolean";
 	}
@@ -1259,13 +1210,6 @@ string typefun(Node* root){
 		if(root->children[0]->children[0]->val == "ArrayType"){
 			return "array_"+ primitiveTypefun(root->children[0]->children[0]->children[0]);
 		}
-		else  //ClassType
-		{
-			string temp = root->children[0]->children[0]->children[0]->children[0]->children[0]->val;
-			temp = temp.substr(12, temp.length()-1);
-			return "class_" + temp;
-		}
-
 	}
 	return "";
 }
@@ -1278,7 +1222,6 @@ void formal_param(Node* root, vector<string> &types_formal_params){
 		vardeclaratorid(root->children[2], type_param); 
 	}else
 	{
-		// cerr << "HI6\n";
 		string type_param = typefun(root->children[0]);
 		types_formal_params.push_back(type_param);
 		vardeclaratorid(root->children[1], type_param);
@@ -1287,7 +1230,6 @@ void formal_param(Node* root, vector<string> &types_formal_params){
 
 void formal_param_list(Node* root, vector<string> &types_formal_params){
 	if(root->children[0]->val == "FormalParameter"){
-		// cerr << "HI5\n";
 		formal_param(root->children[0], types_formal_params);
 	}else{
 		formal_param_list(root->children[0], types_formal_params);
@@ -1297,7 +1239,6 @@ void formal_param_list(Node* root, vector<string> &types_formal_params){
 
 vector<string> original_formal_param_list(Node* root){
 	vector<string> types_formal_params;
-	// cerr << "HI4\n";
 	formal_param_list(root, types_formal_params);
 	// reverse(types_formal_params.begin(), types_formal_params.end());
 	return types_formal_params;
@@ -1385,50 +1326,11 @@ void array_access_type_check(Node* root, vector<string> & type_args){
 	}
 
 	typeCheck(root->children[2]);
-	if(revMap[root->children[2]->nodetype] != "int"){
-		cerr << "Array index should be an int\n" << "Error found at line number: " << root->children[2]->lineno << endl ;
+	if(revMap[root->children[2]->nodetype] != "integer"){
+		cerr << "Array index should be an integer\n" << "Error found at line number: " << root->children[2]->lineno << endl ;
 		exit(0);
 	}
-	type_args.push_back("int");
-}
-
-void constructor_declarator(Node* root){
-	vector<string> type_formal_params;
-	for(int i=0;i<root->children.size();i++)
-	{
-		if((root->children[i])->val=="FormalParameterList")
-		{
-			incr_scope();
-			// cerr << "HI3\n";
-			type_formal_params = original_formal_param_list(root->children[i]);
-			current_scope.pop_back();
-			counts[current_scope]--;
-		}
-	}
-	string temp;
-	for(int i=0;i<root->children.size();i++)
-	{	
-		if((root->children[i])->val=="Identifier")
-		{
-			temp = ((root->children[i])->children[0])->val;
-			temp = temp.substr(12,temp.length()-1);
-			string s1 = "class";
-			root->children[i]->children[0]->nodetype = insert_to_map(s1);
-			// insert(temp, current_scope,root->lineno,insert_to_map(type_), type_formal_params);
-			int flag = 0;
-			for(int i = 0; i < sym_table.size(); i++){
-				if(sym_table[i].first==temp && revMap[sym_table[i].second.type] == "class"){
-					flag = 1;
-					sym_table[i].second.type_args = type_formal_params;
-					break;
-				}
-			}
-			if(!flag){
-				cerr << "Trying to declare a constructor that does not match the class name at line number: " << root->lineno << endl;
-				exit(0);
-			}
-		}
-	}
+	type_args.push_back("integer");
 }
 
 void traverse(Node* root)
@@ -1436,37 +1338,27 @@ void traverse(Node* root)
 	if(root->val == "Identifier"){
 		string temp = root->children[0]->val;
 		temp=temp.substr(12,temp.length()-1);
-		// if(temp == "j"){
-		// 	table_dump();
-		// 	for(auto i:current_scope) cerr << i << " ";
-		// 	cerr << endl;
-		// }
-		int temp_index = lookup(temp);
-		if(sym_table[temp_index].second.scope.size()!=1)
-		{
-			int index = scope_check(temp,current_scope);
-			if(index == -1){
-				cerr << "Error found in Scope Checking at line number" << root->lineno << "\n";
-				exit(0);
-			}
-			root->children[0]->nodetype = sym_table[index].second.type;
-			root->nodetype = sym_table[index].second.type;
-		}else{
-			root->children[0]->nodetype = typeMap["class"];
-			root->nodetype = typeMap["class"];
+		int index = scope_check(temp,current_scope);
+		if(index == -1){
+			cerr << "Error found in Scope Checking at line number" << root->lineno << "\n";
+			exit(0);
 		}
+		root->children[0]->nodetype = sym_table[index].second.type;
+		root->nodetype = sym_table[index].second.type;
 	}
 
 	if(root->val=="FOR__for")
 	{
 		incr_scope();
 	}
-	if(root->val == "MethodBody" && root->children[0]->val == "SEMICOLON__;"){
-		counts[current_scope]++;
-	}
+
 	if(root->val=="InstanceInitializer"||root->val=="StaticInitializer"||root->val=="Block")
 	{
 		incr_scope();
+	}
+	if(root->val=="MethodBody" && root->children[0]->val=="SEMICOLON__;")
+	{
+		counts[current_scope]++;
 	}
 	if(root->val=="MethodHeader")
 	{
@@ -1511,22 +1403,28 @@ void traverse(Node* root)
 				traverse(root->children[i]);
 			}
 		}
-		current_scope.pop_back();
-		current_scope[0]++;
 		return;
 	}
-	if(root->val=="ConstructorBody"){
-		incr_scope();
-	}
-	if(root->val=="ConstructorDeclaration"){
-		// cerr << "HI1\n";
-		for(int i = 0; i < root->children.size(); i++){
-			if(root->children[i]->val == "ConstructorDeclarator"){
-				// cerr << "HI2\n";
-				constructor_declarator(root->children[i]);
+	// to do
+	if(root->val=="ConstructorDeclarator")
+	{
+		for(int i=0;i<root->children.size();i++)
+		{	
+			if((root->children[i])->val=="Identifier")
+			{
+				string temp = ((root->children[i])->children[0])->val;
+				temp = temp.substr(12,temp.length()-1);
+				insert(temp,current_scope,root->children[i]->lineno,15,empty_string_vec);
+				incr_scope();
+			}
+			if(root->children[i]->val == "FormalParameterList"){
+				traverse(root->children[i]);
+			}
+
+			if(root->children[i]->val =="RRB__)"){
+				return;
 			}
 		}
-		return;
 	}
 	if(root->val=="LocalVariableDeclaration")
 	{
@@ -1534,25 +1432,6 @@ void traverse(Node* root)
 		if(root->children[0]->val=="Type")
 		{
 			type_ = typefun(root->children[0]);
-			string temp = type_.substr(0,5);
-			if(temp=="class")
-			{
-				string s = type_.substr(6,type_.length()-1);
-				int flag=0;
-				for(auto it : sym_table)
-				{
-					if(it.first==s && revMap[it.second.type]=="class")
-					{
-						flag=1;
-						break;
-					}
-				}
-				if(!flag)
-				{
-					cerr << "Trying to create object of non-existent class at line number: " << root->lineno <<endl;
-					exit(0);
-				}
-			}
 			vardeclist(root->children[1], type_);
 		}
 		else if(root->children[0]->val=="VAR__var")
@@ -1587,88 +1466,31 @@ void traverse(Node* root)
 
 	if(root->val=="MethodInvocation")
 	{
-		string obj;
 		string temp;
-
-		tab_item class_obj_t, t;
 		if(root->children[0]->children[0]->val=="Identifier")
 		{
 			temp = root->children[0]->children[0]->children[0]->val;
 			temp = temp.substr(12,temp.length()-1);
-			int index = lookup_scope(temp,current_scope);  //assuming lookup
-			if(index==-1)
-			{
-				// table_dump();
-				cerr << "Calling undeclared function at line number: "<< root->lineno <<endl;
-				exit(0);
-			}
-			t = sym_table[index].second;
-			string type__ = revMap[t.type];
-			if(!(type__[0]=='f' && type__[1]=='u'))
-			{
-				cerr<<"Calling invalid function at line number: " << root->lineno <<endl;
-				exit(0); 
-				// return;
-			}
-			type__ = type__.substr(9,type__.length()-1);
-			root->nodetype = insert_to_map(type__);
 		}
 		else
-		{	
-			obj = root->children[0]->children[0]->children[0]->children[0]->val;
+		{
 			temp = root->children[0]->children[2]->children[0]->val;
-			obj = obj.substr(12,obj.length()-1);
 			temp = temp.substr(12,temp.length()-1);
-			int ind = lookup_scope(obj, current_scope);
-			if(ind==-1)
-			{
-				cerr << "No such object exisits"<< endl;
-				cerr << "Line number: " <<root->lineno<<endl;
-				exit(0);
-			}
-			class_obj_t = sym_table[ind].second;
-			string s = revMap[class_obj_t.type].substr(0,5);
-
-			if(s!="class")
-			{
-				cerr << "The called object is not of a class" << endl;
-				cerr << "Line number: " <<root->lineno<<endl;
-				exit(0);
-			}
-			
-			string class_name = revMap[class_obj_t.type].substr(6,revMap[class_obj_t.type].length()-1);
-			int indexx = lookup(class_name);
-			tab_item class_t = sym_table[indexx].second; 
-
-			int flag2 = -1;
-			for(int i = 0; i < sym_table.size(); i++){
-				if(sym_table[i].first == temp && is_prefix(class_t.scope, sym_table[i].second.scope)){
-					flag2 = i;
-					break;
-				}
-			}
-			if(flag2==-1){
-				cerr << "The called method is not a member of the class" << endl;
-				cerr << "Line number: " << root->lineno << endl;
-				exit(0);
-			}
-
-			t = sym_table[flag2].second;
-			string type__ = revMap[t.type];
-			if(!(type__[0]=='f' && type__[1]=='u'))
-			{
-				cerr<<"Calling invalid function at line number: " << root->lineno <<endl;
-				exit(0); 
-				// return;
-			}
-			type__ = type__.substr(9,type__.length()-1);
-			root->nodetype = insert_to_map(type__);
 		}
+		int index = lookup_scope(temp,current_scope);  //assuming lookup
+		tab_item t = sym_table[index].second;
+		string type__ = revMap[t.type];
+		if(type__[0]!='f')
+		{
+			cerr<<"Calling invalid function at line number: " << root->lineno <<endl;
+			exit(0); 
+			// return;
+		}
+		type__ = type__.substr(9,type__.length()-1);
+		root->nodetype = insert_to_map(type__);
 		
-		int flag1 = 0;
 		for(int i = 0; i < root->children.size(); i++){
 			if(root->children[i]->val == "ArgumentList"){
-				flag1 = 1;
 				// fun for arglist
 				make_ast(root->children[i], root->children[i], 0);
 				revise_ast(root->children[i], root->children[i], 0);
@@ -1676,18 +1498,14 @@ void traverse(Node* root)
 				arg_list(root->children[i], type_args);
 				// cerr << root->children[i]->val << endl;
 				if(type_args != t.type_args){
+					// print(type_args);
+					// print(t.type_args);
 					cerr << "Function arguments dont match\n" << "Error found at line number: " << root->children[i]->lineno << "\n";
 					exit(0);
 				}
 			}
 		}
-		if(!flag1){
-			if(t.type_args.size() != 0){
-				cerr << "Function arguments dont match\n" << "Error found at line number: " << root->lineno << "\n";
-				exit(0);
-			}
-		}
-		return;
+
 	}
 	if(root->val=="ArrayAccess")
 	{
@@ -1714,57 +1532,15 @@ void traverse(Node* root)
 		root->nodetype = insert_to_map(type__);
 		return;
 	}
-	if(root->val == "UnqualifiedClassInstanceCreationExpression"){
-		string type__;
-		type__ = root->children[1]->children[0]->children[0]->children[0]->val;
-		type__ = type__.substr(12, type__.length()-1);
-
-		int flag = -1;
-		for(int i = 0; i < sym_table.size(); i++){
-			pair<string, tab_item> it = sym_table[i];
-			if(it.first == type__ && revMap[it.second.type] == "class"){
-				flag = i;
-				break;
-			}
-		}
-		if(flag == -1){
-			cerr << "Creating an instance of a non-existent class at line number: " << root->lineno << endl;
-			exit(0);
-		}
-		type__ = "class_" + type__;
-		root->nodetype = insert_to_map(type__);
-
-		tab_item t = sym_table[flag].second;
-		int flag1 = 0;
-		for(int i = 0; i < root->children.size(); i++){
-			if(root->children[i]->val == "ArgumentList"){
-				flag1 = 1;
-				// fun for arglist
-				make_ast(root->children[i], root->children[i], 0);
-				revise_ast(root->children[i], root->children[i], 0);
-				vector<string> type_args;
-				arg_list(root->children[i], type_args);
-				// cerr << root->children[i]->val << endl;
-				if(type_args != t.type_args){
-					// print(type_args);
-					// print(t.type_args);
-					cerr << "Class constructor arguments dont match\n" << "Error found at line number: " << root->children[i]->lineno << "\n";
-					exit(0);
-				}
-			}
-		}
-		if(!flag1){
-			if(t.type_args.size() != 0){
-				cerr << "Class constructor arguments dont match\n" << "Error found at line number: " << root->lineno << "\n";
-				exit(0);
-			}
-		}	
-	}
 	//field access remains
 
 	for(auto child:root->children)
 	{
 		traverse(child);
+	}
+	if(root->val=="ClassDeclaration"||root->val=="ConstructorDeclaration")
+	{
+		hide_scope();
 	}
 	if(root->val=="InstanceInitializer"||root->val=="StaticInitializer"||root->val=="Block")
 	{
@@ -1775,26 +1551,20 @@ void traverse(Node* root)
 		current_scope.pop_back();
 		counts[current_scope]--;
 	}
-	if(root->val=="ConstructorBody"){
-		hide_scope();
-	}
 }
 
 int semantic_checking(int type1, int type2, string op){
 	if( op == "EQUALTO" )
-		{	
-			if(type1 == type2){
-				return type1;
-			}
-			if(revMap[type1] == "int"){
-				if(revMap[type2] == "int" ){
-					return typeMap["int"];
+		{
+			if(revMap[type1] == "integer"){
+				if(revMap[type2] == "integer" ){
+					return typeMap["integer"];
 				}
 				cerr << "Type error\n";
 				return -1;
 			}
 			if(revMap[type1] == "float"){
-				if(revMap[type2] == "int" || revMap[type2] == "float"){
+				if(revMap[type2] == "integer" || revMap[type2] == "float"){
 					return typeMap["float"];
 				}
 				cerr << "Type error\n";
@@ -1830,19 +1600,19 @@ int semantic_checking(int type1, int type2, string op){
 			{
 				return typeMap["float"];
 			}
-			return typeMap["int"];
+			return typeMap["integer"];
 		}
 	if( op == "MINUS")
 		{
 			if(revMap[type1] == "float"){
-				if(revMap[type2] == "int" || revMap[type2] == "float"){
+				if(revMap[type2] == "integer" || revMap[type2] == "float"){
 					return typeMap["float"];
 				}
 				return -1;
 			}
-			if(revMap[type1] == "int"){
-				if(revMap[type2] == "int"){
-					return typeMap["int"];
+			if(revMap[type1] == "integer"){
+				if(revMap[type2] == "integer"){
+					return typeMap["integer"];
 				}
 				if(revMap[type2] == "float"){
 					return typeMap["float"];
@@ -1856,14 +1626,14 @@ int semantic_checking(int type1, int type2, string op){
 	if( op == "MULT")
 		{
 			if(revMap[type1] == "float"){
-				if(revMap[type2] == "int" || revMap[type2] == "float"){
+				if(revMap[type2] == "integer" || revMap[type2] == "float"){
 					return typeMap["float"];
 				}
 				return -1;
 			}
-			if(revMap[type1] == "int"){
-				if(revMap[type2] == "int"){
-					return typeMap["int"];
+			if(revMap[type1] == "integer"){
+				if(revMap[type2] == "integer"){
+					return typeMap["integer"];
 				}
 				if(revMap[type2] == "float"){
 					return typeMap["float"];
@@ -1877,14 +1647,14 @@ int semantic_checking(int type1, int type2, string op){
 	if( op == "DIVIDE")
 		{
 			if(revMap[type1] == "float"){
-				if(revMap[type2] == "int" || revMap[type2] == "float"){
+				if(revMap[type2] == "integer" || revMap[type2] == "float"){
 					return typeMap["float"];
 				}
 				return -1;
 			}
-			if(revMap[type1] == "int"){
-				if(revMap[type2] == "int"){
-					return typeMap["int"];
+			if(revMap[type1] == "integer"){
+				if(revMap[type2] == "integer"){
+					return typeMap["integer"];
 				}
 				if(revMap[type2] == "float"){
 					return typeMap["float"];
@@ -1898,14 +1668,14 @@ int semantic_checking(int type1, int type2, string op){
 	if( op == "MODULO")
 		{
 			if(revMap[type1] == "float"){
-				if(revMap[type2] == "int" || revMap[type2] == "float"){
+				if(revMap[type2] == "integer" || revMap[type2] == "float"){
 					return typeMap["float"];
 				}
 				return -1;
 			}
-			if(revMap[type1] == "int"){
-				if(revMap[type2] == "int"){
-					return typeMap["int"];
+			if(revMap[type1] == "integer"){
+				if(revMap[type2] == "integer"){
+					return typeMap["integer"];
 				}
 				if(revMap[type2] == "float"){
 					return typeMap["float"];
@@ -1918,9 +1688,9 @@ int semantic_checking(int type1, int type2, string op){
 		}
 	if( op == "LEFTSHIFT")
 		{
-			if(revMap[type1] == "int"){
-				if(revMap[type2] == "int"){
-					return typeMap["int"];
+			if(revMap[type1] == "integer"){
+				if(revMap[type2] == "integer"){
+					return typeMap["integer"];
 				}
 				return -1;
 			}
@@ -1928,9 +1698,9 @@ int semantic_checking(int type1, int type2, string op){
 		}
 	if( op == "RIGHTSHIFT")
 		{
-			if(revMap[type1] == "int"){
-				if(revMap[type2] == "int"){
-					return typeMap["int"];
+			if(revMap[type1] == "integer"){
+				if(revMap[type2] == "integer"){
+					return typeMap["integer"];
 				}
 				return -1;
 			}
@@ -1938,9 +1708,9 @@ int semantic_checking(int type1, int type2, string op){
 		}
 	if( op == "THREEGREAT")
 		{
-			if(revMap[type1] == "int"){
-				if(revMap[type2] == "int"){
-					return typeMap["int"];
+			if(revMap[type1] == "integer"){
+				if(revMap[type2] == "integer"){
+					return typeMap["integer"];
 				}
 				return -1;
 			}
@@ -1951,7 +1721,7 @@ int semantic_checking(int type1, int type2, string op){
 			if(type1 == type2 || revMap[type1] == "VAR" || revMap[type2] == "VAR"){
 				return typeMap["boolean"];
 			}
-			if((revMap[type1] == "float" && revMap[type2] == "int") || (revMap[type2] == "float" && revMap[type1] == "int")){
+			if((revMap[type1] == "float" && revMap[type2] == "integer") || (revMap[type2] == "float" && revMap[type1] == "integer")){
 				return typeMap["boolean"];
 			}
 			return -1;
@@ -1961,16 +1731,16 @@ int semantic_checking(int type1, int type2, string op){
 			if(type1 == type2 || revMap[type1] == "VAR" || revMap[type2] == "VAR"){
 				return typeMap["boolean"];
 			}
-			if((revMap[type1] == "float" && revMap[type2] == "int") || (revMap[type2] == "float" && revMap[type1] == "int")){
+			if((revMap[type1] == "float" && revMap[type2] == "integer") || (revMap[type2] == "float" && revMap[type1] == "integer")){
 				return typeMap["boolean"];
 			}
 			return -1;
 		}
 	if( op == "BITAND")
 		{
-			if(revMap[type1] == "int"){
-				if(revMap[type2] == "int"){
-					return typeMap["int"];
+			if(revMap[type1] == "integer"){
+				if(revMap[type2] == "integer"){
+					return typeMap["integer"];
 				}
 				return -1;
 			}
@@ -1978,9 +1748,9 @@ int semantic_checking(int type1, int type2, string op){
 		}
 	if( op == "BITOR")
 		{
-			if(revMap[type1] == "int"){
-				if(revMap[type2] == "int"){
-					return typeMap["int"];
+			if(revMap[type1] == "integer"){
+				if(revMap[type2] == "integer"){
+					return typeMap["integer"];
 				}
 				return -1;
 			}
@@ -1988,9 +1758,9 @@ int semantic_checking(int type1, int type2, string op){
 		}
 	if( op == "POW")
 		{
-			if(revMap[type1] == "int"){
-				if(revMap[type2] == "int"){
-					return typeMap["int"];
+			if(revMap[type1] == "integer"){
+				if(revMap[type2] == "integer"){
+					return typeMap["integer"];
 				}
 				return -1;
 			}
@@ -2014,7 +1784,7 @@ int semantic_checking(int type1, int type2, string op){
 		}
 	if( op == "GT")
 		{
-			if(type1 == type2 ||revMap[type1] == "VAR" || revMap[type2] == "VAR"||(revMap[type2]=="float" && revMap[type1]=="int")||(revMap[type1]=="float" && revMap[type2]=="int") )
+			if(type1 == type2 ||revMap[type1] == "VAR" || revMap[type2] == "VAR"||(revMap[type2]=="float" && revMap[type1]=="integer")||(revMap[type1]=="float" && revMap[type2]=="integer") )
 			{
 				return typeMap["boolean"];
 			}
@@ -2022,7 +1792,7 @@ int semantic_checking(int type1, int type2, string op){
 		}
 	if( op == "LT")
 		{
-			if(type1 == type2 ||revMap[type1] == "VAR" || revMap[type2] == "VAR"||(revMap[type2]=="float" && revMap[type1]=="int")||(revMap[type1]=="float" && revMap[type2]=="int") )
+			if(type1 == type2 ||revMap[type1] == "VAR" || revMap[type2] == "VAR"||(revMap[type2]=="float" && revMap[type1]=="integer")||(revMap[type1]=="float" && revMap[type2]=="integer") )
 			{
 				return typeMap["boolean"];
 			}
@@ -2030,7 +1800,7 @@ int semantic_checking(int type1, int type2, string op){
 		}
 	if( op == "GEQ")
 		{
-			if(type1 == type2 ||revMap[type1] == "VAR" || revMap[type2] == "VAR"||(revMap[type2]=="float" && revMap[type1]=="int")||(revMap[type1]=="float" && revMap[type2]=="int") )
+			if(type1 == type2 ||revMap[type1] == "VAR" || revMap[type2] == "VAR"||(revMap[type2]=="float" && revMap[type1]=="integer")||(revMap[type1]=="float" && revMap[type2]=="integer") )
 			{
 				return typeMap["boolean"];
 			}
@@ -2038,7 +1808,7 @@ int semantic_checking(int type1, int type2, string op){
 		}
 	if( op == "LEQ")
 		{
-			if(type1 == type2 ||revMap[type1] == "VAR" || revMap[type2] == "VAR"||(revMap[type2]=="float" && revMap[type1]=="int")||(revMap[type1]=="float" && revMap[type2]=="int") )
+			if(type1 == type2 ||revMap[type1] == "VAR" || revMap[type2] == "VAR"||(revMap[type2]=="float" && revMap[type1]=="integer")||(revMap[type1]=="float" && revMap[type2]=="integer") )
 			{
 				return typeMap["boolean"];
 			}
@@ -2046,9 +1816,9 @@ int semantic_checking(int type1, int type2, string op){
 		}
 	if( op == "PLUSET")
 		{
-			if(revMap[type1] == "int"){
-				if(revMap[type2] == "int"){
-					return typeMap["int"];
+			if(revMap[type1] == "integer"){
+				if(revMap[type2] == "integer"){
+					return typeMap["integer"];
 				}
 				if(revMap[type2] == "float"){
 					return typeMap["float"];
@@ -2056,7 +1826,7 @@ int semantic_checking(int type1, int type2, string op){
 				return -1;
 			}
 			if(revMap[type1] == "float"){
-				if(revMap[type2] == "int" || revMap[type2] == "float"){
+				if(revMap[type2] == "integer" || revMap[type2] == "float"){
 					return typeMap["float"];
 				}
 				return -1;
@@ -2068,9 +1838,9 @@ int semantic_checking(int type1, int type2, string op){
 		}
 	if( op == "MINUSET")
 		{
-			if(revMap[type1] == "int"){
-				if(revMap[type2] == "int"){
-					return typeMap["int"];
+			if(revMap[type1] == "integer"){
+				if(revMap[type2] == "integer"){
+					return typeMap["integer"];
 				}
 				if(revMap[type2] == "float"){
 					return typeMap["float"];
@@ -2078,7 +1848,7 @@ int semantic_checking(int type1, int type2, string op){
 				return -1;
 			}
 			if(revMap[type1] == "float"){
-				if(revMap[type2] == "int" || revMap[type2] == "float"){
+				if(revMap[type2] == "integer" || revMap[type2] == "float"){
 					return typeMap["float"];
 				}
 				return -1;
@@ -2087,9 +1857,9 @@ int semantic_checking(int type1, int type2, string op){
 		}
 	if( op == "MULTET")
 		{
-			if(revMap[type1] == "int"){
-				if(revMap[type2] == "int"){
-					return typeMap["int"];
+			if(revMap[type1] == "integer"){
+				if(revMap[type2] == "integer"){
+					return typeMap["integer"];
 				}
 				if(revMap[type2] == "float"){
 					return typeMap["float"];
@@ -2097,7 +1867,7 @@ int semantic_checking(int type1, int type2, string op){
 				return -1;
 			}
 			if(revMap[type1] == "float"){
-				if(revMap[type2] == "int" || revMap[type2] == "float"){
+				if(revMap[type2] == "integer" || revMap[type2] == "float"){
 					return typeMap["float"];
 				}
 				return -1;
@@ -2106,9 +1876,9 @@ int semantic_checking(int type1, int type2, string op){
 		}
 	if( op == "DIVET")
 		{
-			if(revMap[type1] == "int"){
-				if(revMap[type2] == "int"){
-					return typeMap["int"];
+			if(revMap[type1] == "integer"){
+				if(revMap[type2] == "integer"){
+					return typeMap["integer"];
 				}
 				if(revMap[type2] == "float"){
 					return typeMap["float"];
@@ -2116,7 +1886,7 @@ int semantic_checking(int type1, int type2, string op){
 				return -1;
 			}
 			if(revMap[type1] == "float"){
-				if(revMap[type2] == "int" || revMap[type2] == "float"){
+				if(revMap[type2] == "integer" || revMap[type2] == "float"){
 					return typeMap["float"];
 				}
 				return -1;
@@ -2125,9 +1895,9 @@ int semantic_checking(int type1, int type2, string op){
 		}
 	if( op == "ANDET")
 		{
-			if(revMap[type1] == "int"){
-				if(revMap[type2] == "int"){
-					return typeMap["int"];
+			if(revMap[type1] == "integer"){
+				if(revMap[type2] == "integer"){
+					return typeMap["integer"];
 				}
 				return -1;
 			}
@@ -2140,30 +1910,16 @@ int typeCheck(Node* root){
 	if(root->nodetype!=-1){
 		return root->nodetype;
 	}
-
-	int type1;
-	if(root->children[0]->val == "Name"){
-		type1 = typeCheck(root->children[0]->children[2]);
-	}
-	else{
-		type1 = typeCheck(root->children[0]);
-	}
+	int type1 = typeCheck(root->children[0]);
 	int type2 = typeCheck(root->children[1]);
 	int res = semantic_checking(type1, type2, trim(root->val));
-
-
 	if(res == -1){
 		cerr<<"TypeError at line number: " << root->lineno << "\n";
 		exit(0);
 		// yyerror("Error");
 	}
 	
-
 	return root->nodetype=res;
-
-	root->nodetype=res;
-	return res;
-
 }
 
 void typeCheckDfs(Node* root){
@@ -2266,23 +2022,15 @@ int getMyif(Node* root){
 	return blockif[root];
 }
 
-
-void getParams(Node* root, vector<int> & v, vector<int> & typev){
-	if(trim(root->val)!="COMMA" && root->val!="ArgumentList"){
-		v.push_back(root->reg);
-		typev.push_back(root->nodetype);
-		return;
-	}
+void getParams(Node* root, vector<int> & v){
 	for(auto child:root->children){
 		if(child->val=="ArgumentList"){
-			getParams(child, v, typev);
+			getParams(child, v);
 		}
 	}
 	for(auto child:root->children){
 		if(trim(child->val)!="COMMA" && child->val!="ArgumentList"){
 			v.push_back(child->reg);
-
-			typev.push_back(child->nodetype);
 		}
 	}
 }
@@ -2452,10 +2200,8 @@ void gen_3ac(Node* root){
 			out3ac<<"Goto Block"<<blocknum[root]<<'\n';
 		}
 	}
-
-	for(int i=0;i<root->children.size();i++){
-		Node* child = root->children[i];
-		if(!((root->val=="MethodInvocation" && i==0)
+	for(auto child:root->children){
+		if(!((root->val=="MethodInvocation" && trim(child->val)=="IDENTIFIER")
 		|| (root->val=="MethodDeclarator" && trim(child->val)=="IDENTIFIER")
 		|| (root->val=="ClassDeclaration" && trim(child->val)=="IDENTIFIER"))){
 			gen_3ac(child);
@@ -2473,78 +2219,25 @@ void gen_3ac(Node* root){
 	}
 	if(root->val=="MethodInvocation"){
 		root->reg = tot_regs++;
-
-		int to_pop=0, tot_off=8, newvar=0;
+		int to_pop=0;
 		if(root->children.size()==4){
-			vector<int> v, typev;
-			getParams(root->children[2], v, typev);
-			reverse(v.begin(), v.end());
-			for(auto i:typev){
-				tot_off+=type_sizes[revOffMap[i]];
-			}
-			puTabs();
-			out3ac<<"$sp = $sp - "<<tot_off<<'\n';
-			for(int i=0;i<v.size();i++){
+			vector<int> v;
+			getParams(root->children[2], v);
+			for(auto i:v){
 				puTabs();
-			 	out3ac<<"PushParams "<<"t"<<v[i]<<" +"<<newvar<<"($sp)"<<'\n';
-				newvar+=type_sizes[revOffMap[typev[i]]];
+			 	out3ac<<"PushParams "<<"t"<<i<<'\n';
 			}
-			puTabs();
-			out3ac<<"PushParams "<<"$ra"<<" +"<<newvar<<"($sp)"<<'\n';
-			to_pop=v.size()+1;
+			to_pop=v.size();
 		}
 		puTabs();
-		if(root->children[0]->val != "Name"){
-			out3ac<<"t"<<root->reg<<" = "<<"LCall "<<ident(root->children[0]->val)<<'\n';
-		}else{
-			out3ac<<"PushParams "<<ident(root->children[0]->children[0]->val)<<'\n';
-			to_pop++;
-			puTabs();
-			out3ac<<"t"<<root->reg<<" = "<<"LCall "<<ident(root->children[0]->children[2]->val)<<'\n';
-		}
+		out3ac<<"t"<<root->reg<<" = "<<"LCall "<<ident(root->children[0]->val)<<'\n';
 		if(root->children.size()==4){
-			for(int i=0;i<to_pop;i++){
-				puTabs();
-				out3ac<<"PopParam\n";
-			}
-		}
-		puTabs();
-		out3ac<<"$sp = $sp + "<<tot_off<<'\n';
-	}else if(root->val=="UnqualifiedClassInstanceCreationExpression"){
-		root->reg = tot_regs++;
-		int to_pop=0, tot_off=8, newvar=0;
-		puTabs();
-		out3ac<<"t"<<root->reg<<" = "<<"allocmem 16\n";
-		if(root->children.size()==5){
-			vector<int> v, typev;
-			getParams(root->children[3], v, typev);
-			reverse(v.begin(), v.end());
-			for(auto i:typev){
-				tot_off+=type_sizes[revOffMap[i]];
-			}
-			puTabs();
-			out3ac<<"$sp = $sp - "<<tot_off<<'\n';
-			for(int i=0;i<v.size();i++){
-				puTabs();
-			 	out3ac<<"PushParams "<<"t"<<v[i]<<" +"<<newvar<<"($sp)"<<'\n';
-				newvar+=type_sizes[revOffMap[typev[i]]];
-			}
-			puTabs();
-			out3ac<<"PushParams "<<"$ra"<<" +"<<newvar<<"($sp)"<<'\n';
-			to_pop=v.size()+1;
-		}
-		puTabs();
-		out3ac<<"t"<<root->reg<<" = "<<"LCall "<<ident(root->children[1]->val)<<'\n';
-		if(root->children.size()==5){
 			for(int i=0;i<to_pop;i++){
 				puTabs();
 				out3ac<<"PopParams\n";
 			}
 		}
-		puTabs();
-		out3ac<<"$sp = $sp + "<<tot_off<<'\n';
-	}
-	else if(root->val=="ReturnStatement"){
+	}else if(root->val=="ReturnStatement"){
 		puTabs();
 		if(trim(root->children[1]->val)=="SEMICOLON"){
 			out3ac<<"ret\n";
@@ -2671,6 +2364,8 @@ void gen_3ac(Node* root){
 	}
 }
 
+map<string, vector<pair<string, tab_item> > > main_table;
+
 void change_scope()
 {
 	int count =0;
@@ -2698,21 +2393,6 @@ void function_fields(string function_name, vector<int> &func_scope)
 	}
 }
 
-void class_fields(string class_name, vector<int> &class_scope)
-{
-	vector<pair<string, tab_item> > init;
-	main_table.insert(make_pair(class_name, init));
-	for(auto x: sym_table)
-	{
-		vector<int> temp = x.second.scope;
-		if(is_prefix(class_scope,temp) && x.first!=class_name && temp.size()==2)
-		{
-			main_table[class_name].push_back(x);
-		}
-	}
-}
-
-
 void main_create()
 {
 	for(auto x: sym_table)
@@ -2721,36 +2401,6 @@ void main_create()
 		if((revMap[t.type])[0]=='f' && (revMap[t.type])[1]=='u') 
 		{
 			function_fields(x.first, t.scope);
-		}
-
-		if(revMap[t.type]=="class")
-		{
-			class_fields(x.first, t.scope);
-		}
-
-	}
-}
-
-void insert_offests()
-{
-	for(auto &x : main_table)
-	{
-		// int off=0;
-		for(auto &y : x.second)
-		{
-			string s = revOffMap[y.second.type];
-
-			string temp = s.substr(0,4);
-			if(temp=="class")
-			{
-				y.second.offset = 16;
-			}
-			else
-			{
-				y.second.offset = type_sizes[s];
-			}
-
-			// off = off + type_sizes[s];
 		}
 	}
 }
@@ -2762,12 +2412,10 @@ void main_dump()
 		string s="../dumps/"+it.first;
 		string fl =  s+".csv";
 		of.open(fl.c_str());
-
-		of<<"Lexeme,Token,Line,Type,Size\n";
-
+		of<<"Lexeme,Token,Line,Type\n";
 		for(auto j:it.second)
 		{
-			of << j.first << ",Identifier," << j.second.lines << "," << revOffMap[j.second.type] << "," << j.second.offset << endl;
+			of << j.first << ",Identifier," << j.second.lines << "," << revMap[j.second.type] << endl;
 		}
 		of.close();
 	}
@@ -2775,23 +2423,18 @@ void main_dump()
 
 void init_map(){
 	typeMap["VAR"] = 1;
-	revOffMap[1] = "VAR";
 	revMap[1] = "VAR";
 
-	typeMap["int"] = 2;
-	revOffMap[2] = "int";
-	revMap[2] = "int";
+	typeMap["integer"] = 2;
+	revMap[2] = "integer";
 
 	typeMap["float"] = 3;
-	revOffMap[3] = "float";
 	revMap[3] = "float";
 
 	typeMap["boolean"] = 4;
-	revOffMap[4] = "boolean";
 	revMap[4] = "boolean";
 
 	typeMap["string"] = 5;
-	revOffMap[5] = "string";
 	revMap[5] = "string";
 }
 
@@ -2810,19 +2453,13 @@ int main(int argc, char* argv[]){
         cout<<"strict digraph {\n";
         make_ast(root, root, 0);
         revise_ast(root, root, 0);
-
 		fill_parent(root);
-		typeCheckDfs(root);
-
+		gen_3ac(root);
         dfs(root);
         cout<<"}\n";
+		typeCheckDfs(root);
 		change_scope();
 		main_create();
-		filltypes();
-		insert_offests();
-
-		gen_3ac(root);
-
 		main_dump();
     }catch (...){
         cerr << "Compilation Error\n";
