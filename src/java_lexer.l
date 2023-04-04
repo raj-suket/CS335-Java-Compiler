@@ -1,7 +1,7 @@
 %{
     #include<bits/stdc++.h>
     using namespace std;
-    #include "parser.tab.h"
+    #include "test.tab.h"
     int lines=1;
 %}
 
@@ -21,7 +21,8 @@ Decimal_float         ({num}"."[0-9]*{expo}?[fFdD]?)|("."[0-9]+{expo}?[fDFd]?)|(
 binary_expo           [pP][+-]?{num}
 hexsignificand        {Hex_literal}"."?|"0x"{hex}?"."{hex}|"0X"{hex}?"."{hex}
 Hex_float             {hexsignificand}{binary_expo}[fFdD]?
-basic_literal         {Bool_literal}|{Null_literal}|{Hex_literal}[lL]?|{Octal_literal}[lL]?|{Binary_literal}[lL]?|{num}[lL]?|{Decimal_float}|{Hex_float}      
+Int_literal           {Hex_literal}[lL]?|{Octal_literal}[lL]?|{Binary_literal}[lL]?|{num}[lL]?
+Float_literal         {Decimal_float}|{Hex_float}
 Unicode_Escapes       \\u[0-9a-fA-F]{4}
 Escapes               \\[bstnfr"'\\]
 Octal_Escape          \\{Octal_digit}|\\{Zero_To_Three}?{Octal_digit}{Octal_digit}
@@ -35,11 +36,12 @@ Char_Literal           "\'"({Escape_Sequence}|{Input_Character})?"\'"
 String_input_character [^\n\"]
 String_Character       {String_input_character}|{Escape_Sequence}
 String_Literal        "\""{String_Character}*"\""
-Final_literal         {basic_literal}|{Char_Literal}|{String_Literal}|{Text_Block_Literal}
-
+printStatement         "System.out.println(".*");"
 
 %x COMMENT1
 %x COMMENT2
+
+%option yylineno
 
 %%
 
@@ -59,8 +61,14 @@ Final_literal         {basic_literal}|{Char_Literal}|{String_Literal}|{Text_Bloc
 <COMMENT2>"\r\n"      {lines++;}
 <COMMENT2>.           {/*ignore*/}           
 
-
-{Final_literal}       {yylval.lex = new string(yytext); return LITERAL; }
+{printStatement}      {}
+{Bool_literal}        {yylval.lex = new string(yytext); return BOOL_LITERAL;}
+{Null_literal}        {yylval.lex = new string(yytext); return NULL_LITERAL;}
+{Int_literal}         {yylval.lex = new string(yytext); return INT_LITERAL;}
+{Float_literal}       {yylval.lex = new string(yytext); return FLOAT_LITERAL;}
+{Text_Block_Literal}  {yylval.lex = new string(yytext); return TEXTBLOCK_LITERAL;}
+{String_Literal}      {yylval.lex = new string(yytext); return STRING_LITERAL;}
+{Char_Literal}        {yylval.lex = new string(yytext); return CHAR_LITERAL;}
 {FloatType}           {yylval.lex = new string(yytext); return FLOATINGPOINTTYPE;}
 {IntType}             {yylval.lex = new string(yytext); return INTEGRALTYPE;}
 "this"                {yylval.lex = new string(yytext); return THIS;}

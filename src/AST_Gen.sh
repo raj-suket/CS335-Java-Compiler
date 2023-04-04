@@ -1,5 +1,5 @@
 #!/bin/sh
-inputFile="../tests/test1.java"
+inputFile="../tests/test_0.java"
 outputFile="test1.dot"
 verbose="0"
 h="0"
