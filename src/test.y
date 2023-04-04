@@ -1675,9 +1675,15 @@ void traverse(Node* root)
 				vector<string> type_args;
 				arg_list(root->children[i], type_args);
 				// cerr << root->children[i]->val << endl;
-				if(type_args != t.type_args){
-					cerr << "Function arguments dont match\n" << "Error found at line number: " << root->children[i]->lineno << "\n";
+				if(type_args.size() != t.type_args.size()){
+					cerr << "Number of function arguments dont match\n" << "Error found at line number: " << root->children[i]->lineno << "\n";
 					exit(0);
+				}
+				for(int i = 0; i < type_args.size(); i++){
+					if(revMap[typeMap[type_args[i]]] != revMap[typeMap[t.type_args[i]]]){
+						cerr << "Type of function arguments dont match\n" << "Error found at line number: " << root->children[i]->lineno << "\n";
+						exit(0);
+					}
 				}
 			}
 		}
