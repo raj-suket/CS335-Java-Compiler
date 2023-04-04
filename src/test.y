@@ -13,7 +13,7 @@ int insert_to_map(string & s){
 		if(typeMap.find(s)==typeMap.end()){
 			typeMap[s]=typeMap.size()+1;
 			revOffMap[typeMap[s]] = s;
-			revMap[typeMap[s]]="integer";
+			revMap[typeMap[s]]="int";
 		}
 	}
 	else if(s=="float" || s=="double")
@@ -1225,7 +1225,7 @@ string primitiveTypefun(Node* root){
 	if(root->children[0]->val=="IntegralType"){
 		string temp = root->children[0]->children[0]->val;
 		return temp.substr(14,temp.length()-1);
-		// return "integer";
+		// return "int";
 	}else if(root->children[0]->val=="FloatingPointType"){
 		string temp = root->children[0]->children[0]->val;
 		return temp.substr(19,temp.length()-1);
@@ -1368,11 +1368,11 @@ void array_access_type_check(Node* root, vector<string> & type_args){
 	}
 
 	typeCheck(root->children[2]);
-	if(revMap[root->children[2]->nodetype] != "integer"){
-		cerr << "Array index should be an integer\n" << "Error found at line number: " << root->children[2]->lineno << endl ;
+	if(revMap[root->children[2]->nodetype] != "int"){
+		cerr << "Array index should be an int\n" << "Error found at line number: " << root->children[2]->lineno << endl ;
 		exit(0);
 	}
-	type_args.push_back("integer");
+	type_args.push_back("int");
 }
 
 void constructor_declarator(Node* root){
@@ -1771,15 +1771,15 @@ int semantic_checking(int type1, int type2, string op){
 			if(type1 == type2){
 				return type1;
 			}
-			if(revMap[type1] == "integer"){
-				if(revMap[type2] == "integer" ){
-					return typeMap["integer"];
+			if(revMap[type1] == "int"){
+				if(revMap[type2] == "int" ){
+					return typeMap["int"];
 				}
 				cerr << "Type error\n";
 				return -1;
 			}
 			if(revMap[type1] == "float"){
-				if(revMap[type2] == "integer" || revMap[type2] == "float"){
+				if(revMap[type2] == "int" || revMap[type2] == "float"){
 					return typeMap["float"];
 				}
 				cerr << "Type error\n";
@@ -1815,19 +1815,19 @@ int semantic_checking(int type1, int type2, string op){
 			{
 				return typeMap["float"];
 			}
-			return typeMap["integer"];
+			return typeMap["int"];
 		}
 	if( op == "MINUS")
 		{
 			if(revMap[type1] == "float"){
-				if(revMap[type2] == "integer" || revMap[type2] == "float"){
+				if(revMap[type2] == "int" || revMap[type2] == "float"){
 					return typeMap["float"];
 				}
 				return -1;
 			}
-			if(revMap[type1] == "integer"){
-				if(revMap[type2] == "integer"){
-					return typeMap["integer"];
+			if(revMap[type1] == "int"){
+				if(revMap[type2] == "int"){
+					return typeMap["int"];
 				}
 				if(revMap[type2] == "float"){
 					return typeMap["float"];
@@ -1841,14 +1841,14 @@ int semantic_checking(int type1, int type2, string op){
 	if( op == "MULT")
 		{
 			if(revMap[type1] == "float"){
-				if(revMap[type2] == "integer" || revMap[type2] == "float"){
+				if(revMap[type2] == "int" || revMap[type2] == "float"){
 					return typeMap["float"];
 				}
 				return -1;
 			}
-			if(revMap[type1] == "integer"){
-				if(revMap[type2] == "integer"){
-					return typeMap["integer"];
+			if(revMap[type1] == "int"){
+				if(revMap[type2] == "int"){
+					return typeMap["int"];
 				}
 				if(revMap[type2] == "float"){
 					return typeMap["float"];
@@ -1862,14 +1862,14 @@ int semantic_checking(int type1, int type2, string op){
 	if( op == "DIVIDE")
 		{
 			if(revMap[type1] == "float"){
-				if(revMap[type2] == "integer" || revMap[type2] == "float"){
+				if(revMap[type2] == "int" || revMap[type2] == "float"){
 					return typeMap["float"];
 				}
 				return -1;
 			}
-			if(revMap[type1] == "integer"){
-				if(revMap[type2] == "integer"){
-					return typeMap["integer"];
+			if(revMap[type1] == "int"){
+				if(revMap[type2] == "int"){
+					return typeMap["int"];
 				}
 				if(revMap[type2] == "float"){
 					return typeMap["float"];
@@ -1883,14 +1883,14 @@ int semantic_checking(int type1, int type2, string op){
 	if( op == "MODULO")
 		{
 			if(revMap[type1] == "float"){
-				if(revMap[type2] == "integer" || revMap[type2] == "float"){
+				if(revMap[type2] == "int" || revMap[type2] == "float"){
 					return typeMap["float"];
 				}
 				return -1;
 			}
-			if(revMap[type1] == "integer"){
-				if(revMap[type2] == "integer"){
-					return typeMap["integer"];
+			if(revMap[type1] == "int"){
+				if(revMap[type2] == "int"){
+					return typeMap["int"];
 				}
 				if(revMap[type2] == "float"){
 					return typeMap["float"];
@@ -1903,9 +1903,9 @@ int semantic_checking(int type1, int type2, string op){
 		}
 	if( op == "LEFTSHIFT")
 		{
-			if(revMap[type1] == "integer"){
-				if(revMap[type2] == "integer"){
-					return typeMap["integer"];
+			if(revMap[type1] == "int"){
+				if(revMap[type2] == "int"){
+					return typeMap["int"];
 				}
 				return -1;
 			}
@@ -1913,9 +1913,9 @@ int semantic_checking(int type1, int type2, string op){
 		}
 	if( op == "RIGHTSHIFT")
 		{
-			if(revMap[type1] == "integer"){
-				if(revMap[type2] == "integer"){
-					return typeMap["integer"];
+			if(revMap[type1] == "int"){
+				if(revMap[type2] == "int"){
+					return typeMap["int"];
 				}
 				return -1;
 			}
@@ -1923,9 +1923,9 @@ int semantic_checking(int type1, int type2, string op){
 		}
 	if( op == "THREEGREAT")
 		{
-			if(revMap[type1] == "integer"){
-				if(revMap[type2] == "integer"){
-					return typeMap["integer"];
+			if(revMap[type1] == "int"){
+				if(revMap[type2] == "int"){
+					return typeMap["int"];
 				}
 				return -1;
 			}
@@ -1936,7 +1936,7 @@ int semantic_checking(int type1, int type2, string op){
 			if(type1 == type2 || revMap[type1] == "VAR" || revMap[type2] == "VAR"){
 				return typeMap["boolean"];
 			}
-			if((revMap[type1] == "float" && revMap[type2] == "integer") || (revMap[type2] == "float" && revMap[type1] == "integer")){
+			if((revMap[type1] == "float" && revMap[type2] == "int") || (revMap[type2] == "float" && revMap[type1] == "int")){
 				return typeMap["boolean"];
 			}
 			return -1;
@@ -1946,16 +1946,16 @@ int semantic_checking(int type1, int type2, string op){
 			if(type1 == type2 || revMap[type1] == "VAR" || revMap[type2] == "VAR"){
 				return typeMap["boolean"];
 			}
-			if((revMap[type1] == "float" && revMap[type2] == "integer") || (revMap[type2] == "float" && revMap[type1] == "integer")){
+			if((revMap[type1] == "float" && revMap[type2] == "int") || (revMap[type2] == "float" && revMap[type1] == "int")){
 				return typeMap["boolean"];
 			}
 			return -1;
 		}
 	if( op == "BITAND")
 		{
-			if(revMap[type1] == "integer"){
-				if(revMap[type2] == "integer"){
-					return typeMap["integer"];
+			if(revMap[type1] == "int"){
+				if(revMap[type2] == "int"){
+					return typeMap["int"];
 				}
 				return -1;
 			}
@@ -1963,9 +1963,9 @@ int semantic_checking(int type1, int type2, string op){
 		}
 	if( op == "BITOR")
 		{
-			if(revMap[type1] == "integer"){
-				if(revMap[type2] == "integer"){
-					return typeMap["integer"];
+			if(revMap[type1] == "int"){
+				if(revMap[type2] == "int"){
+					return typeMap["int"];
 				}
 				return -1;
 			}
@@ -1973,9 +1973,9 @@ int semantic_checking(int type1, int type2, string op){
 		}
 	if( op == "POW")
 		{
-			if(revMap[type1] == "integer"){
-				if(revMap[type2] == "integer"){
-					return typeMap["integer"];
+			if(revMap[type1] == "int"){
+				if(revMap[type2] == "int"){
+					return typeMap["int"];
 				}
 				return -1;
 			}
@@ -1999,7 +1999,7 @@ int semantic_checking(int type1, int type2, string op){
 		}
 	if( op == "GT")
 		{
-			if(type1 == type2 ||revMap[type1] == "VAR" || revMap[type2] == "VAR"||(revMap[type2]=="float" && revMap[type1]=="integer")||(revMap[type1]=="float" && revMap[type2]=="integer") )
+			if(type1 == type2 ||revMap[type1] == "VAR" || revMap[type2] == "VAR"||(revMap[type2]=="float" && revMap[type1]=="int")||(revMap[type1]=="float" && revMap[type2]=="int") )
 			{
 				return typeMap["boolean"];
 			}
@@ -2007,7 +2007,7 @@ int semantic_checking(int type1, int type2, string op){
 		}
 	if( op == "LT")
 		{
-			if(type1 == type2 ||revMap[type1] == "VAR" || revMap[type2] == "VAR"||(revMap[type2]=="float" && revMap[type1]=="integer")||(revMap[type1]=="float" && revMap[type2]=="integer") )
+			if(type1 == type2 ||revMap[type1] == "VAR" || revMap[type2] == "VAR"||(revMap[type2]=="float" && revMap[type1]=="int")||(revMap[type1]=="float" && revMap[type2]=="int") )
 			{
 				return typeMap["boolean"];
 			}
@@ -2015,7 +2015,7 @@ int semantic_checking(int type1, int type2, string op){
 		}
 	if( op == "GEQ")
 		{
-			if(type1 == type2 ||revMap[type1] == "VAR" || revMap[type2] == "VAR"||(revMap[type2]=="float" && revMap[type1]=="integer")||(revMap[type1]=="float" && revMap[type2]=="integer") )
+			if(type1 == type2 ||revMap[type1] == "VAR" || revMap[type2] == "VAR"||(revMap[type2]=="float" && revMap[type1]=="int")||(revMap[type1]=="float" && revMap[type2]=="int") )
 			{
 				return typeMap["boolean"];
 			}
@@ -2023,7 +2023,7 @@ int semantic_checking(int type1, int type2, string op){
 		}
 	if( op == "LEQ")
 		{
-			if(type1 == type2 ||revMap[type1] == "VAR" || revMap[type2] == "VAR"||(revMap[type2]=="float" && revMap[type1]=="integer")||(revMap[type1]=="float" && revMap[type2]=="integer") )
+			if(type1 == type2 ||revMap[type1] == "VAR" || revMap[type2] == "VAR"||(revMap[type2]=="float" && revMap[type1]=="int")||(revMap[type1]=="float" && revMap[type2]=="int") )
 			{
 				return typeMap["boolean"];
 			}
@@ -2031,9 +2031,9 @@ int semantic_checking(int type1, int type2, string op){
 		}
 	if( op == "PLUSET")
 		{
-			if(revMap[type1] == "integer"){
-				if(revMap[type2] == "integer"){
-					return typeMap["integer"];
+			if(revMap[type1] == "int"){
+				if(revMap[type2] == "int"){
+					return typeMap["int"];
 				}
 				if(revMap[type2] == "float"){
 					return typeMap["float"];
@@ -2041,7 +2041,7 @@ int semantic_checking(int type1, int type2, string op){
 				return -1;
 			}
 			if(revMap[type1] == "float"){
-				if(revMap[type2] == "integer" || revMap[type2] == "float"){
+				if(revMap[type2] == "int" || revMap[type2] == "float"){
 					return typeMap["float"];
 				}
 				return -1;
@@ -2053,9 +2053,9 @@ int semantic_checking(int type1, int type2, string op){
 		}
 	if( op == "MINUSET")
 		{
-			if(revMap[type1] == "integer"){
-				if(revMap[type2] == "integer"){
-					return typeMap["integer"];
+			if(revMap[type1] == "int"){
+				if(revMap[type2] == "int"){
+					return typeMap["int"];
 				}
 				if(revMap[type2] == "float"){
 					return typeMap["float"];
@@ -2063,7 +2063,7 @@ int semantic_checking(int type1, int type2, string op){
 				return -1;
 			}
 			if(revMap[type1] == "float"){
-				if(revMap[type2] == "integer" || revMap[type2] == "float"){
+				if(revMap[type2] == "int" || revMap[type2] == "float"){
 					return typeMap["float"];
 				}
 				return -1;
@@ -2072,9 +2072,9 @@ int semantic_checking(int type1, int type2, string op){
 		}
 	if( op == "MULTET")
 		{
-			if(revMap[type1] == "integer"){
-				if(revMap[type2] == "integer"){
-					return typeMap["integer"];
+			if(revMap[type1] == "int"){
+				if(revMap[type2] == "int"){
+					return typeMap["int"];
 				}
 				if(revMap[type2] == "float"){
 					return typeMap["float"];
@@ -2082,7 +2082,7 @@ int semantic_checking(int type1, int type2, string op){
 				return -1;
 			}
 			if(revMap[type1] == "float"){
-				if(revMap[type2] == "integer" || revMap[type2] == "float"){
+				if(revMap[type2] == "int" || revMap[type2] == "float"){
 					return typeMap["float"];
 				}
 				return -1;
@@ -2091,9 +2091,9 @@ int semantic_checking(int type1, int type2, string op){
 		}
 	if( op == "DIVET")
 		{
-			if(revMap[type1] == "integer"){
-				if(revMap[type2] == "integer"){
-					return typeMap["integer"];
+			if(revMap[type1] == "int"){
+				if(revMap[type2] == "int"){
+					return typeMap["int"];
 				}
 				if(revMap[type2] == "float"){
 					return typeMap["float"];
@@ -2101,7 +2101,7 @@ int semantic_checking(int type1, int type2, string op){
 				return -1;
 			}
 			if(revMap[type1] == "float"){
-				if(revMap[type2] == "integer" || revMap[type2] == "float"){
+				if(revMap[type2] == "int" || revMap[type2] == "float"){
 					return typeMap["float"];
 				}
 				return -1;
@@ -2110,9 +2110,9 @@ int semantic_checking(int type1, int type2, string op){
 		}
 	if( op == "ANDET")
 		{
-			if(revMap[type1] == "integer"){
-				if(revMap[type2] == "integer"){
-					return typeMap["integer"];
+			if(revMap[type1] == "int"){
+				if(revMap[type2] == "int"){
+					return typeMap["int"];
 				}
 				return -1;
 			}
@@ -2125,7 +2125,13 @@ int typeCheck(Node* root){
 	if(root->nodetype!=-1){
 		return root->nodetype;
 	}
-	int type1 = typeCheck(root->children[0]);
+	int type1;
+	if(root->children[0]->val == "Name"){
+		type1 = typeCheck(root->children[0]->children[2]);
+	}
+	else{
+		type1 = typeCheck(root->children[0]);
+	}
 	int type2 = typeCheck(root->children[1]);
 	int res = semantic_checking(type1, type2, trim(root->val));
 	if(res == -1){
@@ -2592,7 +2598,7 @@ void filltypes()
 	type_sizes["double"] = 8;
 	type_sizes["boolean"] = 1;
 	type_sizes["char"] = 2;
-	// type_sizes["integer"] = 4;
+	// type_sizes["int"] = 4;
 	// type_sizes["float"] = 4;
 	// type_sizes["boolean"] = 1;
 }
@@ -2624,6 +2630,20 @@ void function_fields(string function_name, vector<int> &func_scope)
 	}
 }
 
+void class_fields(string class_name, vector<int> &class_scope)
+{
+	vector<pair<string, tab_item> > init;
+	main_table.insert(make_pair(class_name, init));
+	for(auto x: sym_table)
+	{
+		vector<int> temp = x.second.scope;
+		if(is_prefix(class_scope,temp) && x.first!=class_name && temp.size()==2)
+		{
+			main_table[class_name].push_back(x);
+		}
+	}
+}
+
 void main_create()
 {
 	for(auto x: sym_table)
@@ -2632,6 +2652,10 @@ void main_create()
 		if((revMap[t.type])[0]=='f' && (revMap[t.type])[1]=='u') 
 		{
 			function_fields(x.first, t.scope);
+		}
+		if(revMap[t.type]=="class")
+		{
+			class_fields(x.first, t.scope);
 		}
 	}
 }
@@ -2644,7 +2668,15 @@ void insert_offests()
 		for(auto &y : x.second)
 		{
 			string s = revOffMap[y.second.type];
-			y.second.offset = type_sizes[s];
+			string temp = s.substr(0,4);
+			if(temp=="class")
+			{
+				y.second.offset = 16;
+			}
+			else
+			{
+				y.second.offset = type_sizes[s];
+			}
 			// off = off + type_sizes[s];
 		}
 	}
@@ -2657,7 +2689,7 @@ void main_dump()
 		string s="../dumps/"+it.first;
 		string fl =  s+".csv";
 		of.open(fl.c_str());
-		of<<"Lexeme,Token,Line,Type,Offset\n";
+		of<<"Lexeme,Token,Line,Type,Size\n";
 		for(auto j:it.second)
 		{
 			of << j.first << ",Identifier," << j.second.lines << "," << revOffMap[j.second.type] << "," << j.second.offset << endl;
@@ -2673,7 +2705,7 @@ void init_map(){
 
 	typeMap["int"] = 2;
 	revOffMap[2] = "int";
-	revMap[2] = "integer";
+	revMap[2] = "int";
 
 	typeMap["float"] = 3;
 	revOffMap[3] = "float";
@@ -2703,11 +2735,11 @@ int main(int argc, char* argv[]){
         cout<<"strict digraph {\n";
         make_ast(root, root, 0);
         revise_ast(root, root, 0);
+		typeCheckDfs(root);
 		// fill_parent(root);
 		// gen_3ac(root);
         dfs(root);
         cout<<"}\n";
-		typeCheckDfs(root);
 		change_scope();
 		main_create();
 		filltypes();
