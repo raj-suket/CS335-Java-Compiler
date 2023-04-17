@@ -1,12 +1,12 @@
-public class test_1 {
-    float func(int a, int b)
-    {
-        int c = 1;
-        int c = 2;
-        if(c==1)
-        {
-            c++;
-        }
+
+public class append{
+    int sum(int a, int b){
+        float x;
+        return 1;
+    }
+    float hell(int c){
+        double y;
+        return 1;
     }
     public static void main()
     {

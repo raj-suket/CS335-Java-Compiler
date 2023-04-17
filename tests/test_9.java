@@ -7,7 +7,7 @@ public class append{
         return a;
     }
 
-    int funaa(){
-        int c = fun(x, y);
+    int funaa(int g, float h){
+        int c = funaa(x, y);
     }
 }
