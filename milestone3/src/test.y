@@ -2589,7 +2589,8 @@ void gen_3ac(Node* root){
 		mmap[reg_name] = curr_mem - 4;
 		curr_mem -= 4;
 		if(mmap.find(ident(root->val)) != mmap.end()){
-			outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[ident(root->val)] << "]" << endl;
+			string reg_cur = "t"+ to_string(get_temp(root->scope, ident(root->val)));
+			outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_cur] << "]" << endl;
 			outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], eax" << endl;
 		}else{
 			outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], " << 0 << endl;
@@ -2604,10 +2605,11 @@ void gen_3ac(Node* root){
 		outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name_1] << "], eax"<< endl;
 		puTabs();
 		out3ac<<ident(root->children[0]->val)<<" = "<<"t"<<root->children[0]->reg<<'\n';
+		insert_temp(root->scope, ident(root->children[0]->val), root->children[0]->reg);
 		mmap[ident(root->children[0]->val)] = curr_mem - 4;
-		curr_mem -= 4;
-		outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_1] << "]" << endl;
-		outx86<<"mov \t DWORD PTR [rbp" << mmap[ident(root->children[0]->val)] << "], eax" << endl;
+		// curr_mem -= 4;
+		// outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_1] << "]" << endl;
+		// outx86<<"mov \t DWORD PTR [rbp" << mmap[ident(root->children[0]->val)] << "], eax" << endl;
 	}
 	else if(trim(root->val)=="PLUSET"){
 		root->reg = tot_regs++;
@@ -2624,9 +2626,10 @@ void gen_3ac(Node* root){
 		out3ac<<"t"<<root->reg<<" = "<<"t"<<root->children[0]->reg<<" PLUS "<<"t"<<root->children[1]->reg<<'\n';
 		puTabs();
 		mmap[ident(root->children[0]->val)] = curr_mem - 4;
-		curr_mem -= 4;
-		outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name] << "]" << endl;
-		outx86<<"mov \t DWORD PTR [rbp" << mmap[ident(root->children[0]->val)] << "], eax" << endl;
+		insert_temp(root->scope, ident(root->children[0]->val), root->children[0]->reg);
+		// curr_mem -= 4;
+		// outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name] << "]" << endl;
+		// outx86<<"mov \t DWORD PTR [rbp" << mmap[ident(root->children[0]->val)] << "], eax" << endl;
 		out3ac<<ident(root->children[0]->val)<<" = "<<"t"<<root->reg<<'\n';
 	}
 	else if(trim(root->val)=="MINUSET"){
@@ -2644,9 +2647,10 @@ void gen_3ac(Node* root){
 		out3ac<<"t"<<root->reg<<" = "<<"t"<<root->children[0]->reg<<" MINUS "<<"t"<<root->children[1]->reg<<'\n';
 		puTabs();
 		mmap[ident(root->children[0]->val)] = curr_mem - 4;
-		curr_mem -= 4;
-		outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name] << "]" << endl;
-		outx86<<"mov \t DWORD PTR [rbp" << mmap[ident(root->children[0]->val)] << "], eax" << endl;
+		insert_temp(root->scope, ident(root->children[0]->val), root->children[0]->reg);
+		// curr_mem -= 4;
+		// outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name] << "]" << endl;
+		// outx86<<"mov \t DWORD PTR [rbp" << mmap[ident(root->children[0]->val)] << "], eax" << endl;
 		out3ac<<ident(root->children[0]->val)<<" = "<<"t"<<root->reg<<'\n';
 	}
 	else if(trim(root->val)=="MULTET"){
@@ -2664,9 +2668,10 @@ void gen_3ac(Node* root){
 		out3ac<<"t"<<root->reg<<" = "<<"t"<<root->children[0]->reg<<" MULT "<<"t"<<root->children[1]->reg<<'\n';
 		puTabs();
 		mmap[ident(root->children[0]->val)] = curr_mem - 4;
-		curr_mem -= 4;
-		outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name] << "]" << endl;
-		outx86<<"mov \t DWORD PTR [rbp" << mmap[ident(root->children[0]->val)] << "], eax" << endl;
+		insert_temp(root->scope, ident(root->children[0]->val), root->children[0]->reg);
+		// curr_mem -= 4;
+		// outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name] << "]" << endl;
+		// outx86<<"mov \t DWORD PTR [rbp" << mmap[ident(root->children[0]->val)] << "], eax" << endl;
 		out3ac<<ident(root->children[0]->val)<<" = "<<"t"<<root->reg<<'\n';
 	}
 	else if(trim(root->val)=="DIVET"){
@@ -2684,9 +2689,10 @@ void gen_3ac(Node* root){
 		out3ac<<"t"<<root->reg<<" = "<<"t"<<root->children[0]->reg<<" DIVIDE "<<"t"<<root->children[1]->reg<<'\n';
 		puTabs();
 		mmap[ident(root->children[0]->val)] = curr_mem - 4;
-		curr_mem -= 4;
-		outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name] << "]" << endl;
-		outx86<<"mov \t DWORD PTR [rbp" << mmap[ident(root->children[0]->val)] << "], eax" << endl;
+		insert_temp(root->scope, ident(root->children[0]->val), root->children[0]->reg);
+		// curr_mem -= 4;
+		// outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name] << "]" << endl;
+		// outx86<<"mov \t DWORD PTR [rbp" << mmap[ident(root->children[0]->val)] << "], eax" << endl;
 		out3ac<<ident(root->children[0]->val)<<" = "<<"t"<<root->reg<<'\n';
 	}
 	else if(trim(root->val)=="ANDET"){
@@ -2704,9 +2710,10 @@ void gen_3ac(Node* root){
 		out3ac<<"t"<<root->reg<<" = "<<"t"<<root->children[0]->reg<<" AND "<<"t"<<root->children[1]->reg<<'\n';
 		puTabs();
 		mmap[ident(root->children[0]->val)] = curr_mem - 4;
-		curr_mem -= 4;
-		outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name] << "]" << endl;
-		outx86<<"mov \t DWORD PTR [rbp" << mmap[ident(root->children[0]->val)] << "], eax" << endl;
+		insert_temp(root->scope, ident(root->children[0]->val), root->children[0]->reg);
+		// curr_mem -= 4;
+		// outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name] << "]" << endl;
+		// outx86<<"mov \t DWORD PTR [rbp" << mmap[ident(root->children[0]->val)] << "], eax" << endl;
 		out3ac<<ident(root->children[0]->val)<<" = "<<"t"<<root->reg<<'\n';
 	}
 	else if(root->val=="PostIncrementExpression"){
