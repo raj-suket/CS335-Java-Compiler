@@ -2446,21 +2446,32 @@ void gen_3ac(Node* root){
 	}
 	if(root->val=="BasicForStatement"){
 		puTabs();
-		out3ac<<"LoopStart"<<blocksgen<<"\n";
+		out3ac<<"LoopStart"<<blocksgen<<": \n";
+		outx86<<"LoopStart"<<blocksgen<<": \n";
 		if(trim(root->children[2]->val)!="SEMICOLON"){
 			gen_3ac(root->children[2]);
 		}
 		blocknum[root]=blocksgen++;
 		blockscalled++;
 		puTabs();
+		outx86<<"jmp \t ConditionCheck" << blocknum[root] << endl;
+		out3ac<<"Goto ConditionCheck" << blocknum[root] << endl;
+
+		outx86<<"Block"<<blocknum[root]<<": \n";
 		out3ac<<"Block"<<blocknum[root]<<": \n";
 		numins++;
 		gen_3ac((root->children).back());
 		puTabs();
+
+		outx86<<"jmp \t UpdateLoop"<<blocknum[root]<<"\n";
 		out3ac<<"Goto UpdateLoop"<<blocknum[root]<<"\n";
+
 		numins--;
 		puTabs();
+
+		outx86<<"UpdateLoop"<<blocknum[root]<<": \n";
 		out3ac<<"UpdateLoop"<<blocknum[root]<<": \n";
+		
 		numins++;
 		int flag=0;
 		for(auto child:root->children){
@@ -2480,6 +2491,8 @@ void gen_3ac(Node* root){
 		for(auto child:root->children){
 			if(flag==1){
 				if(trim(child->val)!="SEMICOLON"){
+					outx86<<"ConditionCheck" << blocknum[root]<<": \n";
+					out3ac<<"ConditionCheck" << blocknum[root]<<": \n";
 					gen_3ac(child);
 					cond=child;
 				}
@@ -2491,8 +2504,16 @@ void gen_3ac(Node* root){
 		}
 		puTabs();
 		if(cond){
+
+			string reg_name = "t" + to_string(cond->reg);
+			outx86<<"cmp \t DWORD PTR [rbp" << mmap[reg_name] << "], 1\n";
+			outx86<<"je \t\t Block" << blocknum[root] << endl;
+
 			out3ac<<"Case t"<<cond->reg<<" : "<<"Goto Block"<<blocknum[root]<<'\n';
 		}else{
+
+			outx86<<"jmp \t Block"<<blocknum[root]<<'\n'; 
+
 			out3ac<<"Goto Block"<<blocknum[root]<<'\n';
 		}
 	}
