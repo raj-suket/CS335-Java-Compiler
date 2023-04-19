@@ -2344,16 +2344,25 @@ void gen_3ac(Node* root){
 			gen_3ac(curnode->children[2]);
 			puTabs();
 			blockif[curnode]=blockscalled;
+			
+			string reg_name = "t" + to_string(curnode->children[2]->reg);
+			outx86<<"cmp \t DWORD PTR [rbp" << mmap[reg_name] << "], 1\n";
+			outx86<<"je \t\t Block" << blockscalled << endl;
+
 			out3ac<<"Case t"<<curnode->children[2]->reg<<" : "<<"Goto Block"<<blockscalled++<<'\n';
 			curnode = curnode->children[6];
 			if(curnode->val=="IfThenStatement"){
 				blockif[curnode]=blockscalled;
 				gen_3ac(curnode->children[2]);
 				puTabs();
+				string reg_name = "t" + to_string(curnode->children[2]->reg);
+				outx86<<"cmp \t DWORD PTR [rbp" << mmap[reg_name] << "], 1\n";
+				outx86<<"je \t\t Block" << blockscalled << endl;
 				out3ac<<"Case t"<<curnode->children[2]->reg<<" : "<<"Goto Block"<<blockscalled++<<'\n';
 			}else if(curnode->val=="Block"){
 				blockif[curnode]=blockscalled;
 				puTabs();
+				outx86<<"jmp \t Block" << blockscalled << endl;
 				out3ac<<"Goto Block"<<blockscalled++<<'\n';
 			}
 		}
@@ -2361,11 +2370,13 @@ void gen_3ac(Node* root){
 		for(auto child:root->children){
 			if(child->val=="Block"){
 				puTabs();
+				outx86<<"Block"<<getMyif(child)<<": \n";
 				out3ac<<"Block"<<getMyif(child)<<": \n";
 				numins++;
 				gen_3ac(child);
 				puTabs();
-				out3ac<<"Goto EndIfBlock"<<getRecentLoopif(root)<<'\n';
+				outx86<<"jmp \t EndIfBlock"<<getRecentLoopif(root)<<"\n";
+				out3ac<<"Goto EndIfBlock"<<getRecentLoopif(root)<<"\n";
 				numins--;
 			}
 		}
@@ -2378,37 +2389,59 @@ void gen_3ac(Node* root){
 			}
 			gen_3ac(root->children[2]);
 			puTabs();
+			
+			string reg_name = "t" + to_string(root->children[2]->reg);
+			outx86<<"cmp \t DWORD PTR [rbp" << mmap[reg_name] << "], 1\n";
+			outx86<<"je \t\t Block" << blockscalled << endl;
+
 			out3ac<<"Case t"<<root->children[2]->reg<<" : "<<"Goto Block"<<blockscalled<<'\n';
 			puTabs();
-			out3ac<<"Goto EndIfBlock"<<getRecentLoopif(root)<<'\n';
+
+			outx86<<"jmp \t EndIfBlock"<<getRecentLoopif(root)<<"\n";
+			out3ac<<"Goto EndIfBlock"<<getRecentLoopif(root)<<"\n";
 			blockscalled++;
 		}
 		for(auto child:root->children){
 			if(child->val=="Block"){
 				puTabs();
+				outx86<<"Block"<<getMyif(child)<<": \n";
 				out3ac<<"Block"<<getMyif(child)<<": \n";
 				numins++;
 				gen_3ac(child);
 				puTabs();
-				out3ac<<"Goto EndIfBlock"<<getRecentLoopif(root)<<'\n';
+				outx86<<"jmp \t EndIfBlock"<<getRecentLoopif(root)<<"\n";
+				out3ac<<"Goto EndIfBlock"<<getRecentLoopif(root)<<"\n";
 				numins--;
 			}
 		}
 	}
 	if(root->val=="WhileStatement"){
 		puTabs();
-		out3ac<<"LoopStart"<<blocksgen<<"\n";
+		outx86<<"LoopStart"<<blocksgen<<": \n";
+		out3ac<<"LoopStart"<<blocksgen<<": \n";
 		puTabs();
+
+		outx86<<"jmp \t UpdateLoop"<<blocksgen<<endl;
+		out3ac<<"Goto UpdateLoop"<<blocksgen<<endl;
+		
+		outx86<<"Block"<<blocksgen<<": \n";
 		out3ac<<"Block"<<blocksgen<<": \n";
+
 		blocknum[root]=blocksgen++;
 		blockscalled++;
 		numins++;
 		gen_3ac(root->children[4]);
 		numins--;
 		puTabs();
+		outx86<<"UpdateLoop"<<blocknum[root]<<": \n";
 		out3ac<<"UpdateLoop"<<blocknum[root]<<": \n";
 		gen_3ac(root->children[2]);
 		puTabs();
+
+		string reg_name = "t" + to_string(root->children[2]->reg);
+		outx86<<"cmp \t DWORD PTR [rbp" << mmap[reg_name] << "], 1\n";
+		outx86<<"je \t\t Block" << blocknum[root] << endl;
+
 		out3ac<<"Case t"<<root->children[2]->reg<<" : "<<"Goto Block"<<blocknum[root]<<'\n';
 	}
 	if(root->val=="BasicForStatement"){
@@ -2475,12 +2508,14 @@ void gen_3ac(Node* root){
 	if(root->val=="IfThenElseStatement" || root->val=="IfThenStatement"){
 		if(root->parent->val!="IfThenElseStatement"){
 			puTabs();
-			out3ac<<"EndIfBlock"<<getRecentLoopif(root)<<'\n';
+			outx86<<"EndIfBlock"<<getRecentLoopif(root)<<": \n";
+			out3ac<<"EndIfBlock"<<getRecentLoopif(root)<<": \n";
 		}
 	}
 	if(root->val=="WhileStatement" || root->val=="BasicForStatement"){
 		puTabs();
-		out3ac<<"LoopEnd"<<blocknum[root]<<"\n";
+		outx86<<"LoopEnd"<<blocknum[root]<<": \n";
+		out3ac<<"LoopEnd"<<blocknum[root]<<": \n";
 	}
 	if(root->val=="MethodInvocation"){
 		root->reg = tot_regs++;
@@ -2858,6 +2893,66 @@ void gen_3ac(Node* root){
 			mmap[reg_name] = curr_mem - 4;
 			curr_mem -= 4;
 			outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], edx\n";
+		}
+		if(trim(root->val) == "EQ"){
+			outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_1] << "]" << endl;
+			outx86<<"cmp \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_2] << "]" << endl;
+			outx86<<"sete \t al\n";
+			outx86<<"movzx \t eax, al\n";
+			string reg_name = "t" + to_string(root->reg);
+			mmap[reg_name] = curr_mem - 4;
+			curr_mem -= 4;
+			outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], eax\n";
+		}
+		if(trim(root->val) == "LT"){
+			outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_1] << "]" << endl;
+			outx86<<"cmp \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_2] << "]" << endl;
+			outx86<<"setl \t al\n";
+			outx86<<"movzx \t eax, al\n";
+			string reg_name = "t" + to_string(root->reg);
+			mmap[reg_name] = curr_mem - 4;
+			curr_mem -= 4;
+			outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], eax\n";
+		}
+		if(trim(root->val) == "GT"){
+			outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_1] << "]" << endl;
+			outx86<<"cmp \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_2] << "]" << endl;
+			outx86<<"setg \t al\n";
+			outx86<<"movzx \t eax, al\n";
+			string reg_name = "t" + to_string(root->reg);
+			mmap[reg_name] = curr_mem - 4;
+			curr_mem -= 4;
+			outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], eax\n";
+		}
+		if(trim(root->val) == "LEQ"){
+			outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_1] << "]" << endl;
+			outx86<<"cmp \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_2] << "]" << endl;
+			outx86<<"setle \t al\n";
+			outx86<<"movzx \t eax, al\n";
+			string reg_name = "t" + to_string(root->reg);
+			mmap[reg_name] = curr_mem - 4;
+			curr_mem -= 4;
+			outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], eax\n";
+		}
+		if(trim(root->val) == "GEQ"){
+			outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_1] << "]" << endl;
+			outx86<<"cmp \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_2] << "]" << endl;
+			outx86<<"setge \t al\n";
+			outx86<<"movzx \t eax, al\n";
+			string reg_name = "t" + to_string(root->reg);
+			mmap[reg_name] = curr_mem - 4;
+			curr_mem -= 4;
+			outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], eax\n";
+		}
+		if(trim(root->val) == "NEQ"){
+			outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_1] << "]" << endl;
+			outx86<<"cmp \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_2] << "]" << endl;
+			outx86<<"setne \t al\n";
+			outx86<<"movzx \t eax, al\n";
+			string reg_name = "t" + to_string(root->reg);
+			mmap[reg_name] = curr_mem - 4;
+			curr_mem -= 4;
+			outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], eax\n";
 		}
 	}
 	if(root->val=="ClassDeclaration"){

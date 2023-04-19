@@ -1,0 +1,28 @@
+test_0:
+	Goto main
+	main:
+		t1 = ak
+		t2 = 10
+		t1 = t2
+		ak = t1
+		LoopStart1
+		t3 = i
+		t4 = 0
+		t3 = t4
+		i = t3
+		Block1: 
+			t5 = i
+			t6 = 1
+			t7 = t5 PLUS t6
+			i = t7
+			Goto UpdateLoop1
+		UpdateLoop1: 
+			t8 = i
+			t10 = 1
+			t9 = t8 PLUS 10
+			i = t9
+		t11 = i
+		t12 = ak
+		t13 = t11 LT t12
+		Case t13 : Goto Block1
+		LoopEnd1: 
