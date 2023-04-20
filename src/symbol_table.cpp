@@ -81,6 +81,7 @@ void table_dump(){
         of << "\t Types of Args: ";
         for(auto j : sym_table[i].second.type_args) of << j << " ";
         of << endl << endl;
+        of << "\t Temp Reg: " << sym_table[i].second.temp_reg << endl;
     }
     of.close();
 

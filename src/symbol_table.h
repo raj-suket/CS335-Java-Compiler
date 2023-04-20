@@ -8,7 +8,7 @@ typedef struct tab_item{
     int offset=-1;
     // in case the item is for a function entry
     vector<string> type_args;
-    int temp_reg;
+    int temp_reg = -1;
 }tab_item;
 
 static vector<pair<string, tab_item> > sym_table;
