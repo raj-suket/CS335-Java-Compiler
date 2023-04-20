@@ -86,3 +86,29 @@ void table_dump(){
 
 }
 
+void insert_temp(vector<int> & scop, string name, int tempreg){
+    int len=0;
+    auto it = sym_table.begin();
+    for(auto i=sym_table.begin(); i!=sym_table.end(); i++){
+        if(i->first==name && is_prefix(i->second.scope, scop)){
+            if(len<i->second.scope.size()){
+                len=i->second.scope.size();
+                it = i;
+            }
+        }
+    }
+    it->second.temp_reg = tempreg;
+}
+
+int get_temp(vector<int> & scop, string name){
+    int len=0, tempreg=-1;
+    for(auto i:sym_table){
+        if(i.first==name && is_prefix(i.second.scope, scop)){
+            if(len<i.second.scope.size()){
+                len=i.second.scope.size();
+                tempreg = i.second.temp_reg;
+            }
+        }
+    }
+    return tempreg;
+}

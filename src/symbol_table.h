@@ -8,6 +8,7 @@ typedef struct tab_item{
     int offset=-1;
     // in case the item is for a function entry
     vector<string> type_args;
+    int temp_reg;
 }tab_item;
 
 static vector<pair<string, tab_item> > sym_table;
@@ -19,3 +20,7 @@ int lookup(string name);
 int lookup_scope(string name, vector<int> scope);
 
 void table_dump();
+
+int get_temp(vector<int> & scop, string name);
+
+void insert_temp(vector<int> & scop, string name, int tempreg);
