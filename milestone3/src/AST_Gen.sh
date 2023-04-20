@@ -25,3 +25,4 @@ then :
 fi
 ./parse $inputFile $outputFile
 dot -Tps $outputFile -o "Image.ps"
+gcc x86.s
