@@ -2327,12 +2327,17 @@ void gen_3ac(Node* root){
 			mDec=mDec->children[0];
 		}
 		string s = (mDec->val).substr(12, (mDec->val).length()-1);
+		puTabs();
+		outx86<<s<<":\n";
+		out3ac<<s<<":\n";
+
+		outx86<<"pushq \t %rbp\n";
+		outx86<<"movq \t %rsp, %rbp\n";
+
 		if(s=="main"){
 			puTabs();
 			out3ac<<"Goto main\n";
 		}
-		puTabs();
-		out3ac<<s<<":\n";
 		numins++;
 	}
 	if(root->val=="IfThenElseStatement"){
@@ -2346,32 +2351,34 @@ void gen_3ac(Node* root){
 			blockif[curnode]=blockscalled;
 			
 			string reg_name = "t" + to_string(curnode->children[2]->reg);
-			outx86<<"cmp \t DWORD PTR [rbp" << mmap[reg_name] << "], 1\n";
-			outx86<<"je \t\t Block" << blockscalled << endl;
+			outx86<<"movl \t $1, %eax\n";
+			outx86<<"cmpl \t " << mmap[reg_name] << "(%rbp), %eax\n";
+			outx86<<"je \t\t IfBlock" << blockscalled << endl;
 
-			out3ac<<"Case t"<<curnode->children[2]->reg<<" : "<<"Goto Block"<<blockscalled++<<'\n';
+			out3ac<<"Case t"<<curnode->children[2]->reg<<" : "<<"Goto IfBlock"<<blockscalled++<<'\n';
 			curnode = curnode->children[6];
 			if(curnode->val=="IfThenStatement"){
 				blockif[curnode]=blockscalled;
 				gen_3ac(curnode->children[2]);
 				puTabs();
 				string reg_name = "t" + to_string(curnode->children[2]->reg);
-				outx86<<"cmp \t DWORD PTR [rbp" << mmap[reg_name] << "], 1\n";
-				outx86<<"je \t\t Block" << blockscalled << endl;
-				out3ac<<"Case t"<<curnode->children[2]->reg<<" : "<<"Goto Block"<<blockscalled++<<'\n';
+				outx86<<"movl \t $1, %eax\n";
+				outx86<<"cmpl \t " << mmap[reg_name] << "(%rbp), %eax\n";
+				outx86<<"je \t\t IfBlock" << blockscalled << endl;
+				out3ac<<"Case t"<<curnode->children[2]->reg<<" : "<<"Goto IfBlock"<<blockscalled++<<'\n';
 			}else if(curnode->val=="Block"){
 				blockif[curnode]=blockscalled;
 				puTabs();
-				outx86<<"jmp \t Block" << blockscalled << endl;
-				out3ac<<"Goto Block"<<blockscalled++<<'\n';
+				outx86<<"jmp \t IfBlock" << blockscalled << endl;
+				out3ac<<"Goto IfBlock"<<blockscalled++<<'\n';
 			}
 		}
 
 		for(auto child:root->children){
 			if(child->val=="Block"){
 				puTabs();
-				outx86<<"Block"<<getMyif(child)<<": \n";
-				out3ac<<"Block"<<getMyif(child)<<": \n";
+				outx86<<"IfBlock"<<getMyif(child)<<": \n";
+				out3ac<<"IfBlock"<<getMyif(child)<<": \n";
 				numins++;
 				gen_3ac(child);
 				puTabs();
@@ -2391,10 +2398,11 @@ void gen_3ac(Node* root){
 			puTabs();
 			
 			string reg_name = "t" + to_string(root->children[2]->reg);
-			outx86<<"cmp \t DWORD PTR [rbp" << mmap[reg_name] << "], 1\n";
-			outx86<<"je \t\t Block" << blockscalled << endl;
+			outx86<<"movl \t $1, %eax\n";
+			outx86<<"cmpl \t " << mmap[reg_name] << "(%rbp), %eax\n";
+			outx86<<"je \t\t IfBlock" << blockscalled << endl;
 
-			out3ac<<"Case t"<<root->children[2]->reg<<" : "<<"Goto Block"<<blockscalled<<'\n';
+			out3ac<<"Case t"<<root->children[2]->reg<<" : "<<"Goto IfBlock"<<blockscalled<<'\n';
 			puTabs();
 
 			outx86<<"jmp \t EndIfBlock"<<getRecentLoopif(root)<<"\n";
@@ -2404,8 +2412,8 @@ void gen_3ac(Node* root){
 		for(auto child:root->children){
 			if(child->val=="Block"){
 				puTabs();
-				outx86<<"Block"<<getMyif(child)<<": \n";
-				out3ac<<"Block"<<getMyif(child)<<": \n";
+				outx86<<"IfBlock"<<getMyif(child)<<": \n";
+				out3ac<<"IfBlock"<<getMyif(child)<<": \n";
 				numins++;
 				gen_3ac(child);
 				puTabs();
@@ -2439,7 +2447,8 @@ void gen_3ac(Node* root){
 		puTabs();
 
 		string reg_name = "t" + to_string(root->children[2]->reg);
-		outx86<<"cmp \t DWORD PTR [rbp" << mmap[reg_name] << "], 1\n";
+		outx86<<"movl \t $1, %eax\n";
+		outx86<<"cmpl \t " << mmap[reg_name] << "(%rbp), %eax\n";
 		outx86<<"je \t\t Block" << blocknum[root] << endl;
 
 		out3ac<<"Case t"<<root->children[2]->reg<<" : "<<"Goto Block"<<blocknum[root]<<'\n';
@@ -2506,7 +2515,8 @@ void gen_3ac(Node* root){
 		if(cond){
 
 			string reg_name = "t" + to_string(cond->reg);
-			outx86<<"cmp \t DWORD PTR [rbp" << mmap[reg_name] << "], 1\n";
+			outx86<<"movl \t $1, %eax\n";
+			outx86<<"cmpl \t " << mmap[reg_name] << "(%rbp), %eax\n";
 			outx86<<"je \t\t Block" << blocknum[root] << endl;
 
 			out3ac<<"Case t"<<cond->reg<<" : "<<"Goto Block"<<blocknum[root]<<'\n';
@@ -2526,6 +2536,12 @@ void gen_3ac(Node* root){
 			gen_3ac(child);
 		}
 	}
+
+	if(root->val=="MethodDeclaration"){
+		outx86<<"popq \t %rbp\n";
+		outx86<<"ret\n";
+	}
+
 	if(root->val=="IfThenElseStatement" || root->val=="IfThenStatement"){
 		if(root->parent->val!="IfThenElseStatement"){
 			puTabs();
@@ -2635,7 +2651,9 @@ void gen_3ac(Node* root){
 		curr_mem -= 4;
 		puTabs();
 		out3ac<<"t"<<root->reg<<" = "<<getLiteral(root->val)<<'\n';
-		outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], " << getLiteral(root->val) << endl;
+		// outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], " << getLiteral(root->val) << endl;
+		outx86<<"movl \t $" << getLiteral(root->val) << ", " << mmap[reg_name] << "(%rbp)" << endl;
+
 	}
 	else if(check_iden(root->val)){
 		root->reg = tot_regs++;
@@ -2646,10 +2664,13 @@ void gen_3ac(Node* root){
 		curr_mem -= 4;
 		if(mmap.find(ident(root->val)) != mmap.end()){
 			string reg_cur = "t"+ to_string(get_temp(root->scope, ident(root->val)));
-			outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_cur] << "]" << endl;
-			outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], eax" << endl;
+			// outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_cur] << "]" << endl;
+			outx86<<"movl \t " << mmap[reg_name] << "(%rbp), %eax" << endl;
+			// outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], eax" << endl;
+			outx86<<"movl \t %eax, " << mmap[reg_name] << "(%rbp)" << endl;
 		}else{
-			outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], " << 0 << endl;
+			// outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], " << 0 << endl;
+			outx86<<"movl \t $" << 0 << ", " << mmap[reg_name] << "(%rbp)" << endl;
 		}
 	}else if(trim(root->val)=="EQUALTO"){
 		root->reg = root->children[0]->reg;
@@ -2657,8 +2678,10 @@ void gen_3ac(Node* root){
 		string reg_name_2 = "t" + to_string(root->children[1]->reg);
 		puTabs();
 		out3ac<<"t"<<root->children[0]->reg<<" = "<<"t"<<root->children[1]->reg<<'\n';
-		outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_2] << "]" << endl;
-		outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name_1] << "], eax"<< endl;
+		// outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_2] << "]" << endl;
+		// outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name_1] << "], eax"<< endl;
+		outx86<<"movl \t " << mmap[reg_name_2] << "(%rbp), %eax" << endl;
+		outx86<<"movl \t %eax, " << mmap[reg_name_1] << "(%rbp)" << endl;
 		puTabs();
 		out3ac<<ident(root->children[0]->val)<<" = "<<"t"<<root->children[0]->reg<<'\n';
 		insert_temp(root->scope, ident(root->children[0]->val), root->children[0]->reg);
@@ -2672,13 +2695,16 @@ void gen_3ac(Node* root){
 		puTabs();
 		string reg_name_1 = "t" + to_string(root->children[0]->reg);
 		string reg_name_2 = "t" + to_string(root->children[1]->reg);
-		outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_1] << "]" << endl;
-		outx86<<"mov \t edx, " << "DWORD PTR [rbp" << mmap[reg_name_2] << "]" << endl;
-		outx86<<"add \t eax, edx\n";
+		// outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_1] << "]" << endl;
+		// outx86<<"mov \t edx, " << "DWORD PTR [rbp" << mmap[reg_name_2] << "]" << endl;
+		outx86<<"movl \t " << mmap[reg_name_1] << "(%rbp), %eax" << endl;
+		outx86<<"movl \t " << mmap[reg_name_2] << "(%rbp), %edx" << endl;
+		outx86<<"addl \t %edx, %eax\n";
 		string reg_name = "t" + to_string(root->reg);
 		mmap[reg_name] = curr_mem - 4;
 		curr_mem -= 4;
-		outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], eax\n";
+		// outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], eax\n";
+		outx86<<"movl \t %eax, " << mmap[reg_name] << "(%rbp)" << endl;
 		out3ac<<"t"<<root->reg<<" = "<<"t"<<root->children[0]->reg<<" PLUS "<<"t"<<root->children[1]->reg<<'\n';
 		puTabs();
 		mmap[ident(root->children[0]->val)] = curr_mem - 4;
@@ -2693,13 +2719,13 @@ void gen_3ac(Node* root){
 		puTabs();
 		string reg_name_1 = "t" + to_string(root->children[0]->reg);
 		string reg_name_2 = "t" + to_string(root->children[1]->reg);
-		outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_1] << "]" << endl;
-		outx86<<"mov \t edx, " << "DWORD PTR [rbp" << mmap[reg_name_2] << "]" << endl;
-		outx86<<"sub \t eax, edx\n";
+		outx86<<"movl \t " << mmap[reg_name_1] << "(%rbp), %eax" << endl;
+		outx86<<"movl \t " << mmap[reg_name_2] << "(%rbp), %edx" << endl;
+		outx86<<"subl \t %edx, %eax\n";
 		string reg_name = "t" + to_string(root->reg);
 		mmap[reg_name] = curr_mem - 4;
 		curr_mem -= 4;
-		outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], eax\n";
+		outx86<<"movl \t %eax, " << mmap[reg_name] << "(%rbp)" << endl;
 		out3ac<<"t"<<root->reg<<" = "<<"t"<<root->children[0]->reg<<" MINUS "<<"t"<<root->children[1]->reg<<'\n';
 		puTabs();
 		mmap[ident(root->children[0]->val)] = curr_mem - 4;
@@ -2714,13 +2740,13 @@ void gen_3ac(Node* root){
 		puTabs();
 		string reg_name_1 = "t" + to_string(root->children[0]->reg);
 		string reg_name_2 = "t" + to_string(root->children[1]->reg);
-		outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_1] << "]" << endl;
-		outx86<<"mov \t edx, " << "DWORD PTR [rbp" << mmap[reg_name_2] << "]" << endl;
-		outx86<<"imul \t eax, edx\n";
+		outx86<<"movl \t " << mmap[reg_name_1] << "(%rbp), %eax" << endl;
+		outx86<<"movl \t " << mmap[reg_name_2] << "(%rbp), %edx" << endl;
+		outx86<<"imull \t %edx, %eax\n";
 		string reg_name = "t" + to_string(root->reg);
 		mmap[reg_name] = curr_mem - 4;
 		curr_mem -= 4;
-		outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], eax\n";
+		outx86<<"movl \t %eax, " << mmap[reg_name] << "(%rbp)" << endl;
 		out3ac<<"t"<<root->reg<<" = "<<"t"<<root->children[0]->reg<<" MULT "<<"t"<<root->children[1]->reg<<'\n';
 		puTabs();
 		mmap[ident(root->children[0]->val)] = curr_mem - 4;
@@ -2735,13 +2761,13 @@ void gen_3ac(Node* root){
 		puTabs();
 		string reg_name_1 = "t" + to_string(root->children[0]->reg);
 		string reg_name_2 = "t" + to_string(root->children[1]->reg);
-		outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_1] << "]" << endl;
-		outx86<<"mov \t edx, 0\n";
-		outx86<<"idiv \t DWORD PTR [rbp" << mmap[reg_name_2] << "]" << endl;
+		outx86<<"movl \t " << mmap[reg_name_1] << "(%rbp), %eax" << endl;
+		outx86<<"cltd \t \n";
+		outx86<<"idivl \t " << mmap[reg_name_2] << "(%rbp)" << endl;
 		string reg_name = "t" + to_string(root->reg);
 		mmap[reg_name] = curr_mem - 4;
 		curr_mem -= 4;
-		outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], eax\n";
+		outx86<<"movl \t %eax, " << mmap[reg_name] << "(%rbp)" << endl;
 		out3ac<<"t"<<root->reg<<" = "<<"t"<<root->children[0]->reg<<" DIVIDE "<<"t"<<root->children[1]->reg<<'\n';
 		puTabs();
 		mmap[ident(root->children[0]->val)] = curr_mem - 4;
@@ -2756,13 +2782,13 @@ void gen_3ac(Node* root){
 		puTabs();
 		string reg_name_1 = "t" + to_string(root->children[0]->reg);
 		string reg_name_2 = "t" + to_string(root->children[1]->reg);
-		outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_1] << "]" << endl;
-		outx86<<"mov \t edx, " << "DWORD PTR [rbp" << mmap[reg_name_2] << "]" << endl;
-		outx86<<"and \t eax, edx\n";
+		outx86<<"movl \t " << mmap[reg_name_1] << "(%rbp), %eax" << endl;
+		outx86<<"movl \t " << mmap[reg_name_2] << "(%rbp), %edx" << endl;
+		outx86<<"andl \t %edx, %eax\n";
 		string reg_name = "t" + to_string(root->reg);
 		mmap[reg_name] = curr_mem - 4;
 		curr_mem -= 4;
-		outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], eax\n";
+		outx86<<"movl \t %eax, " << mmap[reg_name] << "(%rbp)" << endl;
 		out3ac<<"t"<<root->reg<<" = "<<"t"<<root->children[0]->reg<<" AND "<<"t"<<root->children[1]->reg<<'\n';
 		puTabs();
 		mmap[ident(root->children[0]->val)] = curr_mem - 4;
@@ -2826,154 +2852,157 @@ void gen_3ac(Node* root){
 		string reg_name_2 = "t" + to_string(root->children[1]->reg);
 		out3ac<<"t"<<root->reg<<" = "<<"t"<<root->children[0]->reg<<" "<<trim(root->val)<<" "<<"t"<<root->children[1]->reg<<'\n';
 		if(trim(root->val) == "PLUS"){
-			outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_1] << "]" << endl;
-			outx86<<"mov \t edx, " << "DWORD PTR [rbp" << mmap[reg_name_2] << "]" << endl;
-			outx86<<"add \t eax, edx\n";
+			outx86<<"movl \t " << mmap[reg_name_1] << "(%rbp), %eax" << endl;
+			outx86<<"movl \t " << mmap[reg_name_2] << "(%rbp), %edx" << endl;
+			outx86<<"addl \t %edx, %eax\n";
 			string reg_name = "t" + to_string(root->reg);
 			mmap[reg_name] = curr_mem - 4;
 			curr_mem -= 4;
-			outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], eax\n";
+			outx86<<"movl \t %eax, " << mmap[reg_name] << "(%rbp)" << endl;
 		}
 		if(trim(root->val) == "MULT"){
-			outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_1] << "]" << endl;
-			outx86<<"mov \t edx, " << "DWORD PTR [rbp" << mmap[reg_name_2] << "]" << endl;
-			outx86<<"imul \t eax, edx\n";
+			outx86<<"movl \t " << mmap[reg_name_1] << "(%rbp), %eax" << endl;
+			outx86<<"movl \t " << mmap[reg_name_2] << "(%rbp), %edx" << endl;
+			outx86<<"imull \t %edx, %eax\n";
 			string reg_name = "t" + to_string(root->reg);
 			mmap[reg_name] = curr_mem - 4;
 			curr_mem -= 4;
-			outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], eax\n";
+			outx86<<"movl \t %eax, " << mmap[reg_name] << "(%rbp)" << endl;
 		}
 		if(trim(root->val) == "MINUS"){
-			outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_1] << "]" << endl;
-			outx86<<"mov \t edx, " << "DWORD PTR [rbp" << mmap[reg_name_2] << "]" << endl;
-			outx86<<"sub \t eax, edx\n";
+			outx86<<"movl \t " << mmap[reg_name_1] << "(%rbp), %eax" << endl;
+			outx86<<"movl \t " << mmap[reg_name_2] << "(%rbp), %edx" << endl;
+			outx86<<"subl \t %edx, %eax\n";
 			string reg_name = "t" + to_string(root->reg);
 			mmap[reg_name] = curr_mem - 4;
 			curr_mem -= 4;
-			outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], eax\n";
+			outx86<<"movl \t %eax, " << mmap[reg_name] << "(%rbp)" << endl;
 		}
 		if(trim(root->val) == "BITAND"){
-			outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_1] << "]" << endl;
-			outx86<<"mov \t edx, " << "DWORD PTR [rbp" << mmap[reg_name_2] << "]" << endl;
-			outx86<<"and \t eax, edx\n";
+			outx86<<"movl \t " << mmap[reg_name_1] << "(%rbp), %eax" << endl;
+			outx86<<"movl \t " << mmap[reg_name_2] << "(%rbp), %edx" << endl;
+			outx86<<"andl \t %edx, %eax\n";
 			string reg_name = "t" + to_string(root->reg);
 			mmap[reg_name] = curr_mem - 4;
 			curr_mem -= 4;
-			outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], eax\n";
+			outx86<<"movl \t %eax, " << mmap[reg_name] << "(%rbp)" << endl;
 		}
 		if(trim(root->val) == "BITOR"){
-			outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_1] << "]" << endl;
-			outx86<<"mov \t edx, " << "DWORD PTR [rbp" << mmap[reg_name_2] << "]" << endl;
-			outx86<<"or \t eax, edx\n";
+			outx86<<"movl \t " << mmap[reg_name_1] << "(%rbp), %eax" << endl;
+			outx86<<"movl \t " << mmap[reg_name_2] << "(%rbp), %edx" << endl;
+			outx86<<"orl \t %edx, %eax\n";
 			string reg_name = "t" + to_string(root->reg);
 			mmap[reg_name] = curr_mem - 4;
 			curr_mem -= 4;
-			outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], eax\n";
+			outx86<<"movl \t %eax, " << mmap[reg_name] << "(%rbp)" << endl;
 		}
 		if(trim(root->val) == "POW"){
-			outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_1] << "]" << endl;
-			outx86<<"mov \t edx, " << "DWORD PTR [rbp" << mmap[reg_name_2] << "]" << endl;
-			outx86<<"xor \t eax, edx\n";
+			outx86<<"movl \t " << mmap[reg_name_1] << "(%rbp), %eax" << endl;
+			outx86<<"movl \t " << mmap[reg_name_2] << "(%rbp), %edx" << endl;
+			outx86<<"xorl \t %edx, %eax\n";
 			string reg_name = "t" + to_string(root->reg);
 			mmap[reg_name] = curr_mem - 4;
 			curr_mem -= 4;
-			outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], eax\n";
+			outx86<<"movl \t %eax, " << mmap[reg_name] << "(%rbp)" << endl;
 		}
 		if(trim(root->val) == "RIGHTSHIFT"){
-			outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_1] << "]" << endl;
-			outx86<<"mov \t edx, " << "DWORD PTR [rbp" << mmap[reg_name_2] << "]" << endl;
-			outx86<<"shr \t eax, edx\n";
+			outx86<<"movl \t " << mmap[reg_name_2] << "(%rbp), %eax" << endl;
+			outx86<<"movl \t " << mmap[reg_name_1] << "(%rbp), %edx" << endl;
+			outx86<<"movl \t %eax, %ecx\n";
+			outx86<<"sarl \t %cl, %edx\n";
 			string reg_name = "t" + to_string(root->reg);
 			mmap[reg_name] = curr_mem - 4;
 			curr_mem -= 4;
-			outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], eax\n";
+			outx86<<"movl \t %edx, " << mmap[reg_name] << "(%rbp)" << endl;
 		}
 		if(trim(root->val) == "LEFTSHIFT"){
-			outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_1] << "]" << endl;
-			outx86<<"mov \t edx, " << "DWORD PTR [rbp" << mmap[reg_name_2] << "]" << endl;
-			outx86<<"shl \t eax, edx\n";
+			outx86<<"movl \t " << mmap[reg_name_2] << "(%rbp), %eax" << endl;
+			outx86<<"movl \t " << mmap[reg_name_1] << "(%rbp), %edx" << endl;
+			outx86<<"movl \t %eax, %ecx\n";
+			outx86<<"sall \t %cl, %edx\n";
 			string reg_name = "t" + to_string(root->reg);
 			mmap[reg_name] = curr_mem - 4;
 			curr_mem -= 4;
-			outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], eax\n";
+			outx86<<"movl \t %edx, " << mmap[reg_name] << "(%rbp)" << endl;
 		}
 		if(trim(root->val) == "DIVIDE"){
-			outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_1] << "]" << endl;
-			outx86<<"mov \t edx, 0\n";
-			outx86<<"idiv \t DWORD PTR [rbp" << mmap[reg_name_2] << "]" << endl;
+			outx86<<"movl \t " << mmap[reg_name_1] << "(%rbp), %eax" << endl;
+			outx86<<"cltd \t \n";
+			outx86<<"idivl \t " << mmap[reg_name_2] << "(%rbp)" << endl;
 			string reg_name = "t" + to_string(root->reg);
 			mmap[reg_name] = curr_mem - 4;
 			curr_mem -= 4;
-			outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], eax\n";
+			outx86<<"movl \t %eax, " << mmap[reg_name] << "(%rbp)" << endl;
+
 		}
 		if(trim(root->val) == "MODULO"){
-			outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_1] << "]" << endl;
-			outx86<<"mov \t edx, 0\n";
-			outx86<<"idiv \t DWORD PTR [rbp" << mmap[reg_name_2] << "]" << endl;
+			outx86<<"movl \t " << mmap[reg_name_1] << "(%rbp), %eax" << endl;
+			outx86<<"cltd \t \n";
+			outx86<<"idivl \t " << mmap[reg_name_2] << "(%rbp)" << endl;
 			string reg_name = "t" + to_string(root->reg);
 			mmap[reg_name] = curr_mem - 4;
 			curr_mem -= 4;
-			outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], edx\n";
+			outx86<<"movl \t %edx, " << mmap[reg_name] << "(%rbp)" << endl;
 		}
 		if(trim(root->val) == "EQ"){
-			outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_1] << "]" << endl;
-			outx86<<"cmp \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_2] << "]" << endl;
-			outx86<<"sete \t al\n";
-			outx86<<"movzx \t eax, al\n";
+			outx86<<"movl \t " << mmap[reg_name_1] << "(%rbp), %eax" << endl;
+			outx86<<"cmpl \t " << mmap[reg_name_2] << "(%rbp), %eax" << endl;
+			outx86<<"sete \t %al\n";
+			outx86<<"movzbl \t %al, %eax\n";
 			string reg_name = "t" + to_string(root->reg);
 			mmap[reg_name] = curr_mem - 4;
 			curr_mem -= 4;
-			outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], eax\n";
+			outx86<<"movl \t %eax, " << mmap[reg_name] << "(%rbp)" << endl;
 		}
 		if(trim(root->val) == "LT"){
-			outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_1] << "]" << endl;
-			outx86<<"cmp \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_2] << "]" << endl;
-			outx86<<"setl \t al\n";
-			outx86<<"movzx \t eax, al\n";
+			outx86<<"movl \t " << mmap[reg_name_1] << "(%rbp), %eax" << endl;
+			outx86<<"cmpl \t " << mmap[reg_name_2] << "(%rbp), %eax" << endl;
+			outx86<<"setl \t %al\n";
+			outx86<<"movzbl \t %al, %eax\n";
 			string reg_name = "t" + to_string(root->reg);
 			mmap[reg_name] = curr_mem - 4;
 			curr_mem -= 4;
-			outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], eax\n";
+			outx86<<"movl \t %eax, " << mmap[reg_name] << "(%rbp)" << endl;
 		}
 		if(trim(root->val) == "GT"){
-			outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_1] << "]" << endl;
-			outx86<<"cmp \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_2] << "]" << endl;
-			outx86<<"setg \t al\n";
-			outx86<<"movzx \t eax, al\n";
+			outx86<<"movl \t " << mmap[reg_name_1] << "(%rbp), %eax" << endl;
+			outx86<<"cmpl \t " << mmap[reg_name_2] << "(%rbp), %eax" << endl;
+			outx86<<"setg \t %al\n";
+			outx86<<"movzbl \t %al, %eax\n";
 			string reg_name = "t" + to_string(root->reg);
 			mmap[reg_name] = curr_mem - 4;
 			curr_mem -= 4;
-			outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], eax\n";
+			outx86<<"movl \t %eax, " << mmap[reg_name] << "(%rbp)" << endl;
 		}
 		if(trim(root->val) == "LEQ"){
-			outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_1] << "]" << endl;
-			outx86<<"cmp \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_2] << "]" << endl;
-			outx86<<"setle \t al\n";
-			outx86<<"movzx \t eax, al\n";
+			outx86<<"movl \t " << mmap[reg_name_1] << "(%rbp), %eax" << endl;
+			outx86<<"cmpl \t " << mmap[reg_name_2] << "(%rbp), %eax" << endl;
+			outx86<<"setle \t %al\n";
+			outx86<<"movzbl \t %al, %eax\n";
 			string reg_name = "t" + to_string(root->reg);
 			mmap[reg_name] = curr_mem - 4;
 			curr_mem -= 4;
-			outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], eax\n";
+			outx86<<"movl \t %eax, " << mmap[reg_name] << "(%rbp)" << endl;
 		}
 		if(trim(root->val) == "GEQ"){
-			outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_1] << "]" << endl;
-			outx86<<"cmp \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_2] << "]" << endl;
-			outx86<<"setge \t al\n";
-			outx86<<"movzx \t eax, al\n";
+			outx86<<"movl \t " << mmap[reg_name_1] << "(%rbp), %eax" << endl;
+			outx86<<"cmpl \t " << mmap[reg_name_2] << "(%rbp), %eax" << endl;
+			outx86<<"setge \t %al\n";
+			outx86<<"movzbl \t %al, %eax\n";
 			string reg_name = "t" + to_string(root->reg);
 			mmap[reg_name] = curr_mem - 4;
 			curr_mem -= 4;
-			outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], eax\n";
+			outx86<<"movl \t %eax, " << mmap[reg_name] << "(%rbp)" << endl;
 		}
 		if(trim(root->val) == "NEQ"){
-			outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_1] << "]" << endl;
-			outx86<<"cmp \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_2] << "]" << endl;
-			outx86<<"setne \t al\n";
-			outx86<<"movzx \t eax, al\n";
+			outx86<<"movl \t " << mmap[reg_name_1] << "(%rbp), %eax" << endl;
+			outx86<<"cmpl \t " << mmap[reg_name_2] << "(%rbp), %eax" << endl;
+			outx86<<"setne \t %al\n";
+			outx86<<"movzbl \t %al, %eax\n";
 			string reg_name = "t" + to_string(root->reg);
 			mmap[reg_name] = curr_mem - 4;
 			curr_mem -= 4;
-			outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], eax\n";
+			outx86<<"movl \t %eax, " << mmap[reg_name] << "(%rbp)" << endl;
 		}
 	}
 	if(root->val=="ClassDeclaration"){
@@ -3113,7 +3142,8 @@ int main(int argc, char* argv[]){
 		init_map();
 		fill_sizemap();
 		out3ac.open("3ac.txt");
-		outx86.open("x86.txt");
+		outx86.open("x86.s");
+		outx86<<".globl main\n";
 		string inp = argv[1];
 		string outp = argv[2];
         freopen(inp.c_str(), "r", stdin);
