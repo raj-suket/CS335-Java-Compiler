@@ -1210,9 +1210,10 @@ bool revise_ast(Node* root, Node* par, int idx){
     }
     return false;
 }
-void vardeclaratorid(Node* root, string type_)
+void vardeclaratorid(Node* root, string type_, vector<int> curr_scope)
 {
 	if(root->children[0]->val == "Identifier"){
+		root->children[0]->children[0]->scope = curr_scope;
 		string temp = root->children[0]->children[0]->val;
 		temp = temp.substr(12,temp.length()-1);
 		root->children[0]->children[0]->nodetype = insert_to_map(type_);
@@ -1220,12 +1221,12 @@ void vardeclaratorid(Node* root, string type_)
 		insert(temp,current_scope,root->children[0]->lineno,insert_to_map(type_), empty_string_vec);
 	}else{
 		type_ = "array_" + type_;
-		vardeclaratorid(root->children[0], type_);
+		vardeclaratorid(root->children[0], type_, current_scope);
 	}
 }
 void vardeclarator(Node* root, string type_)
 {	
-	vardeclaratorid(root->children[0], type_);
+	vardeclaratorid(root->children[0], type_, current_scope);
 }
 void vardeclist(Node* root, string type_)
 {
@@ -1272,35 +1273,35 @@ string typefun(Node* root){
 	return "";
 }
 
-void formal_param(Node* root, vector<string> &types_formal_params){
+void formal_param(Node* root, vector<string> &types_formal_params, vector<int> curr_scope){
 	if(root->children[0]->val=="Modifiers")
 	{	
 		string type_param = typefun(root->children[1]);
 		types_formal_params.push_back(type_param);
-		vardeclaratorid(root->children[2], type_param); 
+		vardeclaratorid(root->children[2], type_param, curr_scope); 
 	}else
 	{
 		// cerr << "HI6\n";
 		string type_param = typefun(root->children[0]);
 		types_formal_params.push_back(type_param);
-		vardeclaratorid(root->children[1], type_param);
+		vardeclaratorid(root->children[1], type_param, curr_scope);
 	}
 }
 
-void formal_param_list(Node* root, vector<string> &types_formal_params){
+void formal_param_list(Node* root, vector<string> &types_formal_params, vector<int> curr_scope){
 	if(root->children[0]->val == "FormalParameter"){
 		// cerr << "HI5\n";
-		formal_param(root->children[0], types_formal_params);
+		formal_param(root->children[0], types_formal_params, curr_scope);
 	}else{
-		formal_param_list(root->children[0], types_formal_params);
-		formal_param(root->children[2], types_formal_params);
+		formal_param_list(root->children[0], types_formal_params, curr_scope);
+		formal_param(root->children[2], types_formal_params, curr_scope);
 	}
 }
 
-vector<string> original_formal_param_list(Node* root){
+vector<string> original_formal_param_list(Node* root, vector<int> curr_scope){
 	vector<string> types_formal_params;
 	// cerr << "HI4\n";
-	formal_param_list(root, types_formal_params);
+	formal_param_list(root, types_formal_params, curr_scope);
 	// reverse(types_formal_params.begin(), types_formal_params.end());
 	return types_formal_params;
 }
@@ -1340,7 +1341,7 @@ void method_declarator(Node* root, string type_)
 		if((root->children[i])->val=="FormalParameterList")
 		{
 			incr_scope();
-			type_formal_params = original_formal_param_list(root->children[i]);
+			type_formal_params = original_formal_param_list(root->children[i], current_scope);
 			current_scope.pop_back();
 			counts[current_scope]--;
 		}
@@ -1402,7 +1403,7 @@ void constructor_declarator(Node* root){
 		{
 			incr_scope();
 			// cerr << "HI3\n";
-			type_formal_params = original_formal_param_list(root->children[i]);
+			type_formal_params = original_formal_param_list(root->children[i], current_scope);
 			current_scope.pop_back();
 			counts[current_scope]--;
 		}
@@ -1438,6 +1439,7 @@ void traverse(Node* root)
 	root->scope = current_scope;
 	if(root->val == "Identifier"){
 		string temp = root->children[0]->val;
+		root->children[0]->scope = current_scope;
 		temp=temp.substr(12,temp.length()-1);
 		// if(temp == "j"){
 		// 	table_dump();
@@ -2298,6 +2300,17 @@ void getParams(Node* root, vector<int> & v, vector<int> & typev){
 	}
 }
 
+void getArgs(Node * root, vector<Node* > & v){
+	visited[root] = true;
+	for(auto child: root->children){
+		getArgs(child, v);
+	}
+	if(check_iden(root->val)){
+		v.push_back(root);
+	}
+}
+
+int main_mem = -1;
 void gen_3ac(Node* root){
 	if(visited[root]==true){
 		return;
@@ -2323,6 +2336,11 @@ void gen_3ac(Node* root){
 				break;
 			}
 		}
+		vector<Node* > v;
+		if(mDec->children[2]->val=="FormalParameter" || mDec->children[2]->val=="FormalParameterList"){
+			getArgs(mDec->children[2], v);
+		}
+
 		while(mDec->val=="MethodDeclarator"){
 			mDec=mDec->children[0];
 		}
@@ -2333,9 +2351,25 @@ void gen_3ac(Node* root){
 
 		outx86<<"pushq \t %rbp\n";
 		outx86<<"movq \t %rsp, %rbp\n";
-
+		curr_mem = 0;
+		int temp_offsets = -4;
+		int temp_curr_mem = curr_mem - v.size() * 4;
+		for(auto i: v){
+			out3ac<<"t" << tot_regs++ << " = " << temp_offsets <<  "(sp)\n";
+			string reg_name = "t" + to_string(tot_regs-1);
+			mmap[reg_name] = temp_curr_mem - 4;
+			temp_curr_mem -= 4;
+			outx86<<"movl \t " << temp_offsets << "(%rbp), %eax\n";
+			outx86<<"movl \t %eax, " << mmap[reg_name] << "(%rbp)\n";
+			// for(auto j : i->scope) cerr << j  <<" ";
+			// cerr << endl << " " << ident(i->val) << endl;
+			insert_temp(i->scope, ident(i->val), tot_regs-1); 
+			temp_offsets -= 4;
+			curr_mem -= 8;
+		}
 		if(s=="main"){
 			puTabs();
+			// main_mem = curr_mem;
 			out3ac<<"Goto main\n";
 		}
 		numins++;
@@ -2561,15 +2595,21 @@ void gen_3ac(Node* root){
 		if(root->children.size()==4){
 			vector<int> v, typev;
 			getParams(root->children[2], v, typev);
-			reverse(v.begin(), v.end());
+			// reverse(v.begin(), v.end());
 			for(auto i:typev){
 				tot_off+=type_sizes[revOffMap[i]];
 			}
 			puTabs();
 			out3ac<<"$sp = $sp - "<<tot_off<<'\n';
+			outx86<<"subq\t "<<"$"<<-1*curr_mem+4<<", %rsp\n";
+			int stack_offset = -20;
 			for(int i=0;i<v.size();i++){
 				puTabs();
 			 	out3ac<<"PushParams "<<"t"<<v[i]<<" +"<<newvar<<"($sp)"<<'\n';
+				string reg1 = "t"+to_string(v[i]);
+				outx86<<"movl\t "<<mmap[reg1]<<"(%rbp), %eax\n";
+				outx86<<"movl\t "<<"%eax, "<<stack_offset<<"(%rsp)\n";
+				stack_offset=stack_offset-4;
 				newvar+=type_sizes[revOffMap[typev[i]]];
 			}
 			puTabs();
@@ -2579,6 +2619,11 @@ void gen_3ac(Node* root){
 		puTabs();
 		if(root->children[0]->val != "Name"){
 			out3ac<<"t"<<root->reg<<" = "<<"LCall "<<ident(root->children[0]->val)<<'\n';
+			outx86<<"call\t "<<ident(root->children[0]->val)<<"\n";
+			string reg_name = "t" + to_string(root->reg);
+			mmap[reg_name] = curr_mem - 4;
+			curr_mem -= 4;
+			outx86<<"movl \t %eax, " << mmap[reg_name] << "(%rbp)\n";
 		}else{
 			out3ac<<"PushParams "<<ident(root->children[0]->children[0]->val)<<'\n';
 			to_pop++;
@@ -2593,6 +2638,7 @@ void gen_3ac(Node* root){
 		}
 		puTabs();
 		out3ac<<"$sp = $sp + "<<tot_off<<'\n';
+		outx86<<"addq\t $"<<-1* curr_mem<<", %rsp\n";
 	}else if(root->val=="UnqualifiedClassInstanceCreationExpression"){
 		root->reg = tot_regs++;
 		int to_pop=0, tot_off=8, newvar=0;
@@ -3272,7 +3318,6 @@ int main(int argc, char* argv[]){
         freopen(outp.c_str(), "w", stdout);
         yyparse();
 		traverse(root);
-		table_dump();
         cout<<"strict digraph {\n";
         make_ast(root, root, 0);
         revise_ast(root, root, 0);
@@ -3288,6 +3333,7 @@ int main(int argc, char* argv[]){
 		insert_offests();
 
 		gen_3ac(root);
+		table_dump();
 
 		main_dump();
     }catch (...){
