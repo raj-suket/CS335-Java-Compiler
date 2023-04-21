@@ -1771,6 +1771,14 @@ void traverse(Node* root)
 			}
 		}	
 	}
+	if(root->val=="ArrayCreationExpression"){
+		string type__;
+		type__ = root->children[1]->children[0]->children[0]->val;
+		type__ = type__.substr(14, type__.length()-1);
+
+		type__ = "array_" + type__;
+		root->nodetype = insert_to_map(type__);
+	}
 	//field access remains
 
 	for(auto child:root->children)
@@ -2155,6 +2163,9 @@ int typeCheck(Node* root){
 	int type1;
 	if(root->children[0]->val == "Name"){
 		type1 = typeCheck(root->children[0]->children[2]);
+	}
+	else if(root->children[0]->val == "VariableDeclaratorId"){
+		type1 = typeCheck(root->children[0]->children[0]);
 	}
 	else{
 		type1 = typeCheck(root->children[0]);
@@ -2601,7 +2612,7 @@ void gen_3ac(Node* root){
 			}
 			puTabs();
 			out3ac<<"$sp = $sp - "<<tot_off<<'\n';
-			outx86<<"subq\t "<<"$"<<-1*curr_mem+4<<", %rsp\n";
+			outx86<<"subq\t "<<"$"<<-1*curr_mem+4 + 16 - (-1*curr_mem+4)%16<<", %rsp\n";
 			int stack_offset = -20;
 			for(int i=0;i<v.size();i++){
 				puTabs();
@@ -2638,7 +2649,7 @@ void gen_3ac(Node* root){
 		}
 		puTabs();
 		out3ac<<"$sp = $sp + "<<tot_off<<'\n';
-		outx86<<"addq\t $"<<-1* curr_mem<<", %rsp\n";
+		outx86<<"addq\t $"<<-1* curr_mem + 16 - (-1* curr_mem) % 16<<", %rsp\n";
 	}else if(root->val=="UnqualifiedClassInstanceCreationExpression"){
 		root->reg = tot_regs++;
 		int to_pop=0, tot_off=8, newvar=0;
@@ -2672,6 +2683,31 @@ void gen_3ac(Node* root){
 		}
 		puTabs();
 		out3ac<<"$sp = $sp + "<<tot_off<<'\n';
+	}else if(root->val=="ArrayCreationExpression"){
+		root->reg = tot_regs++;
+		puTabs();
+		out3ac<<"t"<<root->reg<<" =  4 MULT t" << root->children[2]->children[1]->reg << "\n";
+		
+		string reg_name_2 = "t" + to_string(root->children[2]->children[1]->reg);
+
+		string temp_curr_reg = "t" + to_string(tot_regs++);
+		mmap[temp_curr_reg] = curr_mem - 4;
+		curr_mem -= 4;
+
+		string reg_name = "t" + to_string(root->reg);
+		mmap[reg_name] = curr_mem - 8;
+		curr_mem -= 8;
+
+		outx86<<"movl \t $4, " << mmap[temp_curr_reg] << "(%rbp)\n";
+		outx86<<"movl \t " << mmap[temp_curr_reg] << "(%rbp), %edx\n";	
+		outx86<<"movl \t " << mmap[reg_name_2] << "(%rbp), %eax\n";
+		outx86<<"imull \t %edx, %eax\n";
+		outx86<<"movq \t %rax, %rdi\n";
+		outx86<<"call \t malloc\n";
+		outx86<<"movq \t %rax, " << mmap[reg_name] << "(%rbp)\n";
+		puTabs();
+		out3ac<<"allocmem t" << root->reg << endl;
+	
 	}
 	else if(root->val=="ReturnStatement"){
 		puTabs();
@@ -2722,6 +2758,10 @@ void gen_3ac(Node* root){
 			outx86<<"movl \t $" << 0 << ", " << mmap[reg_name] << "(%rbp)" << endl;
 		}
 	}else if(trim(root->val)=="EQUALTO"){
+		Node* oldRootchild = root->children[0];
+		if(root->children[0]->val == "VariableDeclaratorId"){
+			root->children[0] = root->children[0]->children[0] ;
+		}
 		root->reg = root->children[0]->reg;
 		string reg_name_1 = "t" + to_string(root->children[0]->reg);
 		string reg_name_2 = "t" + to_string(root->children[1]->reg);
@@ -2744,6 +2784,7 @@ void gen_3ac(Node* root){
 
 		outx86<<"movl \t " << mmap[reg_name_1] << "(%rbp), %eax" << endl;
 		outx86<<"movl \t %eax, " << mmap[cur_reg] << "(%rbp)" << endl;
+		root->children[0] = oldRootchild;
 		// curr_mem -= 4;
 		// outx86<<"mov \t eax, " << "DWORD PTR [rbp" << mmap[reg_name_1] << "]" << endl;
 		// outx86<<"mov \t DWORD PTR [rbp" << mmap[ident(root->children[0]->val)] << "], eax" << endl;
