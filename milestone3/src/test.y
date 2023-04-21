@@ -1210,6 +1210,14 @@ bool revise_ast(Node* root, Node* par, int idx){
     }
     return false;
 }
+
+bool check_iden(string & s){
+	if(s.length()>=10 && s.substr(0, 10)=="IDENTIFIER"){
+		return true;
+	}
+	return false;
+}
+
 void vardeclaratorid(Node* root, string type_, vector<int> curr_scope)
 {
 	if(root->children[0]->val == "Identifier"){
@@ -1381,6 +1389,16 @@ string array_access_name(Node* root, vector<int> curr_scope){
 		return temp;
 	}else{
 		return array_access_name(root->children[0]->children[0], curr_scope);
+	}
+}
+
+void set_all_scopes_in_node(Node* root, vector<int> cur_scope){
+	for(auto child:root->children){
+		set_all_scopes_in_node(child, cur_scope);
+	}
+
+	if(check_iden(root->val)){
+		root->scope = cur_scope;
 	}
 }
 
@@ -1710,6 +1728,7 @@ void traverse(Node* root)
 		revise_ast(root, root, 0);
 		vector<string> type_args;
 
+		set_all_scopes_in_node(root, current_scope);
 		array_access_type_check(root, type_args);
 		// cerr << "HI\n";
 
@@ -2226,13 +2245,6 @@ void puTabs(){
 
 string ident(string & s){
 	return s.substr(12, s.length()-1);
-}
-
-bool check_iden(string & s){
-	if(s.length()>=10 && s.substr(0, 10)=="IDENTIFIER"){
-		return true;
-	}
-	return false;
 }
 
 string trim(string & s){
@@ -2798,9 +2810,17 @@ void gen_3ac(Node* root){
 			out3ac<<"t"<<root->children[0]->reg<<" = "<<"t"<<root->children[1]->reg<<'\n';
 			// outx86<<"mov \t rax, " << "DWORD PTR [rbp" << mmap[reg_name_2] << "]" << endl;
 			// outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name_1] << "], rax"<< endl;
-			outx86<<"movq \t " << mmap[reg_name_2] << "(%rbp), %rdx" << endl;
-			outx86<<"movq \t " << mmap[reg_name_1] << "(%rbp), %rax" << endl;
-			outx86<<"movq \t %rdx, 0(%rax)\n";
+
+			if(root->children[1]->val != "ArrayAccess"){
+				outx86<<"movq \t " << mmap[reg_name_2] << "(%rbp), %rdx" << endl;
+				outx86<<"movq \t " << mmap[reg_name_1] << "(%rbp), %rax" << endl;
+				outx86<<"movq \t %rdx, 0(%rax)\n";
+			}else{
+				outx86<<"movq \t " << mmap[reg_name_2] << "(%rbp), %rax" << endl;
+				outx86<<"movq \t 0(%rax), %rdx\n";  
+				outx86<<"movq \t " << mmap[reg_name_1] << "(%rbp), %rax" << endl;
+				outx86<<"movq \t %rdx, 0(%rax)\n";
+			}
 		}
 		root->children[0] = oldRootchild;
 		// curr_mem -= 8;
