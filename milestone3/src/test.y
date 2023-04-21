@@ -1390,11 +1390,11 @@ void array_access_type_check(Node* root, vector<string> & type_args){
 		array_access_type_check(root->children[0], type_args);
 	}
 
-	typeCheck(root->children[2]);
-	if(revMap[root->children[2]->nodetype] != "int"){
-		cerr << "Array index should be an int\n" << "Error found at line number: " << root->children[2]->lineno << endl ;
-		exit(0);
-	}
+	// typeCheck(root->children[2]);
+	// if(revMap[root->children[2]->nodetype] != "int"){
+	// 	cerr << "Array index should be an int\n" << "Error found at line number: " << root->children[2]->lineno << endl ;
+	// 	exit(0);
+	// }
 	type_args.push_back("int");
 }
 
@@ -1708,10 +1708,10 @@ void traverse(Node* root)
 		string temp = array_access_name(root, current_scope);
 		make_ast(root, root, 0);
 		revise_ast(root, root, 0);
-		
 		vector<string> type_args;
 
 		array_access_type_check(root, type_args);
+		// cerr << "HI\n";
 
 		int index = lookup_scope(temp,current_scope);
 		tab_item t = sym_table[index].second;
@@ -2585,11 +2585,6 @@ void gen_3ac(Node* root){
 		}
 	}
 
-	if(root->val=="MethodDeclaration"){
-		outx86<<"popq \t %rbp\n";
-		outx86<<"ret\n";
-	}
-
 	if(root->val=="IfThenElseStatement" || root->val=="IfThenStatement"){
 		if(root->parent->val!="IfThenElseStatement"){
 			puTabs();
@@ -2716,9 +2711,13 @@ void gen_3ac(Node* root){
 		puTabs();
 		if(trim(root->children[1]->val)=="SEMICOLON"){
 			out3ac<<"ret\n";
+			outx86<<"popq \t %rbp\n";
+			outx86<<"ret\n";
 		}else{
 			string cur_reg = "t"+to_string(root->children[1]->reg);
 			outx86<<"movq\t"<<mmap[cur_reg]<<"(%rbp), %rax\n";
+			outx86<<"popq \t %rbp\n";
+			outx86<<"ret\n";
 			out3ac<<"ret t"<<root->children[1]->reg<<'\n';
 		}
 	}
@@ -3093,7 +3092,8 @@ void gen_3ac(Node* root){
 		mmap[reg_name] = curr_mem - 8;
 		curr_mem -= 8;
 
-		if(root->parent->children[0]->val == "ArrayAccess"){
+		
+		if(root->parent->children[0]->val == "ArrayAccess" && root->parent->val == "EQUALTO__="){
 			outx86<<"movq \t " << mmap[treg1_name] << "(%rbp), %rdx\n";
 			outx86<<"movq \t " << mmap[reg_name_1] << "(%rbp), %rax\n";
 			outx86<<"addq \t %rdx, %rax\n";
