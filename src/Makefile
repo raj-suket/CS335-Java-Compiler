@@ -10,4 +10,4 @@ lex.yy.c: java_lexer.l
 	flex java_lexer.l
 
 clean:
-	rm -rf test.tab.c test.tab.h test1.dot Symbol_Table.txt parse lex.yy.c Image.ps 3ac.txt ../dumps/*.csv *.dot
+	rm -rf test.tab.c test.tab.h test1.dot Symbol_Table.txt parse lex.yy.c Image.ps 3ac.txt x86.txt ../dumps/*.csv *.dot *.out *.s out

@@ -7,7 +7,8 @@ extern int yylineno;
 map<string, int> typeMap;
 map<int, string> revMap;
 map<int, string> revOffMap;
-
+map<string, int> mmap; 
+int curr_mem = 0; 
 int insert_to_map(string & s){
 	if(s=="byte" || s=="int" || s=="long" || s=="short" || s=="char"){
 		if(typeMap.find(s)==typeMap.end()){
@@ -60,6 +61,7 @@ struct Node{
 	int reg=-1;
 	vector<string> inst;
 	Node* parent;
+	vector<int> scope;
 };
 
 Node* createnode (string  val, vector<Node*>  children){
@@ -1208,9 +1210,18 @@ bool revise_ast(Node* root, Node* par, int idx){
     }
     return false;
 }
-void vardeclaratorid(Node* root, string type_)
+
+bool check_iden(string & s){
+	if(s.length()>=10 && s.substr(0, 10)=="IDENTIFIER"){
+		return true;
+	}
+	return false;
+}
+
+void vardeclaratorid(Node* root, string type_, vector<int> curr_scope)
 {
 	if(root->children[0]->val == "Identifier"){
+		root->children[0]->children[0]->scope = curr_scope;
 		string temp = root->children[0]->children[0]->val;
 		temp = temp.substr(12,temp.length()-1);
 		root->children[0]->children[0]->nodetype = insert_to_map(type_);
@@ -1218,12 +1229,12 @@ void vardeclaratorid(Node* root, string type_)
 		insert(temp,current_scope,root->children[0]->lineno,insert_to_map(type_), empty_string_vec);
 	}else{
 		type_ = "array_" + type_;
-		vardeclaratorid(root->children[0], type_);
+		vardeclaratorid(root->children[0], type_, current_scope);
 	}
 }
 void vardeclarator(Node* root, string type_)
 {	
-	vardeclaratorid(root->children[0], type_);
+	vardeclaratorid(root->children[0], type_, current_scope);
 }
 void vardeclist(Node* root, string type_)
 {
@@ -1270,41 +1281,42 @@ string typefun(Node* root){
 	return "";
 }
 
-void formal_param(Node* root, vector<string> &types_formal_params){
+void formal_param(Node* root, vector<string> &types_formal_params, vector<int> curr_scope){
 	if(root->children[0]->val=="Modifiers")
 	{	
 		string type_param = typefun(root->children[1]);
 		types_formal_params.push_back(type_param);
-		vardeclaratorid(root->children[2], type_param); 
+		vardeclaratorid(root->children[2], type_param, curr_scope); 
 	}else
 	{
 		// cerr << "HI6\n";
 		string type_param = typefun(root->children[0]);
 		types_formal_params.push_back(type_param);
-		vardeclaratorid(root->children[1], type_param);
+		vardeclaratorid(root->children[1], type_param, curr_scope);
 	}
 }
 
-void formal_param_list(Node* root, vector<string> &types_formal_params){
+void formal_param_list(Node* root, vector<string> &types_formal_params, vector<int> curr_scope){
 	if(root->children[0]->val == "FormalParameter"){
 		// cerr << "HI5\n";
-		formal_param(root->children[0], types_formal_params);
+		formal_param(root->children[0], types_formal_params, curr_scope);
 	}else{
-		formal_param_list(root->children[0], types_formal_params);
-		formal_param(root->children[2], types_formal_params);
+		formal_param_list(root->children[0], types_formal_params, curr_scope);
+		formal_param(root->children[2], types_formal_params, curr_scope);
 	}
 }
 
-vector<string> original_formal_param_list(Node* root){
+vector<string> original_formal_param_list(Node* root, vector<int> curr_scope){
 	vector<string> types_formal_params;
 	// cerr << "HI4\n";
-	formal_param_list(root, types_formal_params);
+	formal_param_list(root, types_formal_params, curr_scope);
 	// reverse(types_formal_params.begin(), types_formal_params.end());
 	return types_formal_params;
 }
 void typeCheckDfs(Node* );
-void arg_expr(Node* root, vector<string> & type_args){
+void arg_expr(Node* root, vector<string> & type_args, vector<int> curr_scope){
 	if(trim(root->val) == "IDENTIFIER"){
+		root->scope = curr_scope;
 		string temp = root->val;
 		temp=temp.substr(12,temp.length()-1);
 		int index = scope_check(temp,current_scope);
@@ -1316,13 +1328,13 @@ void arg_expr(Node* root, vector<string> & type_args){
 		type_args.push_back(revMap[root->nodetype]);
 }
 
-void arg_list(Node* root, vector<string> & type_args){
+void arg_list(Node* root, vector<string> & type_args, vector<int> curr_scope){
 	for(int i = 0; i < root->children.size(); i++){
 		if(root->children[i]->val == "ArgumentList"){
-			arg_list(root->children[i], type_args);
+			arg_list(root->children[i], type_args, curr_scope);
 		}
 		else{
-			arg_expr(root->children[i], type_args);
+			arg_expr(root->children[i], type_args, curr_scope);
 		}
 	}
 }
@@ -1338,7 +1350,7 @@ void method_declarator(Node* root, string type_)
 		if((root->children[i])->val=="FormalParameterList")
 		{
 			incr_scope();
-			type_formal_params = original_formal_param_list(root->children[i]);
+			type_formal_params = original_formal_param_list(root->children[i], current_scope);
 			current_scope.pop_back();
 			counts[current_scope]--;
 		}
@@ -1359,22 +1371,34 @@ void method_declarator(Node* root, string type_)
 	}
 }
 
-string array_access_name(Node* root){
+string array_access_name(Node* root, vector<int> curr_scope){
 	if(root->children[0]->val == "Name"){
 		string temp;
 		if(root->children[0]->children[0]->val=="Identifier")
-		{
+		{	
+			root->children[0]->children[0]->children[0]->scope = curr_scope;
 			temp = root->children[0]->children[0]->children[0]->val;
 			temp = temp.substr(12,temp.length()-1);
 		}
 		else
 		{
+			root->children[0]->children[2]->children[0]->scope = curr_scope;
 			temp = root->children[0]->children[2]->children[0]->val;
 			temp = temp.substr(12,temp.length()-1);
 		}
 		return temp;
 	}else{
-		return array_access_name(root->children[0]->children[0]);
+		return array_access_name(root->children[0]->children[0], curr_scope);
+	}
+}
+
+void set_all_scopes_in_node(Node* root, vector<int> cur_scope){
+	for(auto child:root->children){
+		set_all_scopes_in_node(child, cur_scope);
+	}
+
+	if(check_iden(root->val)){
+		root->scope = cur_scope;
 	}
 }
 
@@ -1384,11 +1408,11 @@ void array_access_type_check(Node* root, vector<string> & type_args){
 		array_access_type_check(root->children[0], type_args);
 	}
 
-	typeCheck(root->children[2]);
-	if(revMap[root->children[2]->nodetype] != "int"){
-		cerr << "Array index should be an int\n" << "Error found at line number: " << root->children[2]->lineno << endl ;
-		exit(0);
-	}
+	// typeCheck(root->children[2]);
+	// if(revMap[root->children[2]->nodetype] != "int"){
+	// 	cerr << "Array index should be an int\n" << "Error found at line number: " << root->children[2]->lineno << endl ;
+	// 	exit(0);
+	// }
 	type_args.push_back("int");
 }
 
@@ -1400,7 +1424,7 @@ void constructor_declarator(Node* root){
 		{
 			incr_scope();
 			// cerr << "HI3\n";
-			type_formal_params = original_formal_param_list(root->children[i]);
+			type_formal_params = original_formal_param_list(root->children[i], current_scope);
 			current_scope.pop_back();
 			counts[current_scope]--;
 		}
@@ -1433,8 +1457,10 @@ void constructor_declarator(Node* root){
 
 void traverse(Node* root)
 {
+	root->scope = current_scope;
 	if(root->val == "Identifier"){
 		string temp = root->children[0]->val;
+		root->children[0]->scope = current_scope;
 		temp=temp.substr(12,temp.length()-1);
 		// if(temp == "j"){
 		// 	table_dump();
@@ -1673,7 +1699,7 @@ void traverse(Node* root)
 				make_ast(root->children[i], root->children[i], 0);
 				revise_ast(root->children[i], root->children[i], 0);
 				vector<string> type_args;
-				arg_list(root->children[i], type_args);
+				arg_list(root->children[i], type_args, current_scope);
 				// cerr << root->children[i]->val << endl;
 				if(type_args.size() != t.type_args.size()){
 					cerr << "Number of function arguments dont match\n" << "Error found at line number: " << root->children[i]->lineno << "\n";
@@ -1697,13 +1723,14 @@ void traverse(Node* root)
 	}
 	if(root->val=="ArrayAccess")
 	{
-		string temp = array_access_name(root);
+		string temp = array_access_name(root, current_scope);
 		make_ast(root, root, 0);
 		revise_ast(root, root, 0);
-		
 		vector<string> type_args;
 
+		set_all_scopes_in_node(root, current_scope);
 		array_access_type_check(root, type_args);
+		// cerr << "HI\n";
 
 		int index = lookup_scope(temp,current_scope);
 		tab_item t = sym_table[index].second;
@@ -1749,7 +1776,7 @@ void traverse(Node* root)
 				make_ast(root->children[i], root->children[i], 0);
 				revise_ast(root->children[i], root->children[i], 0);
 				vector<string> type_args;
-				arg_list(root->children[i], type_args);
+				arg_list(root->children[i], type_args, current_scope);
 				// cerr << root->children[i]->val << endl;
 				if(type_args != t.type_args){
 					// print(type_args);
@@ -1765,6 +1792,14 @@ void traverse(Node* root)
 				exit(0);
 			}
 		}	
+	}
+	if(root->val=="ArrayCreationExpression"){
+		string type__;
+		type__ = root->children[1]->children[0]->children[0]->val;
+		type__ = type__.substr(14, type__.length()-1);
+
+		type__ = "array_" + type__;
+		root->nodetype = insert_to_map(type__);
 	}
 	//field access remains
 
@@ -2151,6 +2186,9 @@ int typeCheck(Node* root){
 	if(root->children[0]->val == "Name"){
 		type1 = typeCheck(root->children[0]->children[2]);
 	}
+	else if(root->children[0]->val == "VariableDeclaratorId"){
+		type1 = typeCheck(root->children[0]->children[0]);
+	}
 	else{
 		type1 = typeCheck(root->children[0]);
 	}
@@ -2191,6 +2229,7 @@ void fill_parent(Node* root){
 set<string> ops = {"INSTANCEOF","EQUALTO","PLUSET","MINUSET","MULTET","DIVET","ANDET","LT","GT","LEQ","GEQ","OR","AND","BITOR","BITAND","POW","EQ","NEQ","LEFTSHIFT","RIGHTSHIFT","THREEGREAT","PLUS","MINUS","MULT","DIVIDE","MODULO","TILDE","NOT","QUEST","COLON"};
 
 ofstream out3ac;
+ofstream outx86;
 int numins=0;
 int tot_regs=1;
 int blocksgen=1;
@@ -2200,18 +2239,12 @@ map<string, stack<int> > regstack;
 void puTabs(){
 	for(int i=0;i<numins;i++){
 		out3ac<<"\t";
+		// outx86<<"\t";
 	}
 }
 
 string ident(string & s){
 	return s.substr(12, s.length()-1);
-}
-
-bool check_iden(string & s){
-	if(s.length()>=10 && s.substr(0, 10)=="IDENTIFIER"){
-		return true;
-	}
-	return false;
 }
 
 string trim(string & s){
@@ -2293,6 +2326,17 @@ void getParams(Node* root, vector<int> & v, vector<int> & typev){
 	}
 }
 
+void getArgs(Node * root, vector<Node* > & v){
+	visited[root] = true;
+	for(auto child: root->children){
+		getArgs(child, v);
+	}
+	if(check_iden(root->val)){
+		v.push_back(root);
+	}
+}
+
+int main_mem = -1;
 void gen_3ac(Node* root){
 	if(visited[root]==true){
 		return;
@@ -2318,16 +2362,42 @@ void gen_3ac(Node* root){
 				break;
 			}
 		}
+		vector<Node* > v;
+		if(mDec->children[2]->val=="FormalParameter" || mDec->children[2]->val=="FormalParameterList"){
+			getArgs(mDec->children[2], v);
+		}
+
 		while(mDec->val=="MethodDeclarator"){
 			mDec=mDec->children[0];
 		}
 		string s = (mDec->val).substr(12, (mDec->val).length()-1);
+		puTabs();
+		outx86<<s<<":\n";
+		out3ac<<s<<":\n";
+
+		outx86<<"pushq \t %rbp\n";
+		outx86<<"movq \t %rsp, %rbp\n";
+		curr_mem = 0;
+		int temp_offsets = -8;
+		int temp_curr_mem = curr_mem - v.size() * 8;
+		for(auto i: v){
+			out3ac<<"t" << tot_regs++ << " = " << temp_offsets <<  "(sp)\n";
+			string reg_name = "t" + to_string(tot_regs-1);
+			mmap[reg_name] = temp_curr_mem - 8;
+			temp_curr_mem -= 8;
+			outx86<<"movq \t " << temp_offsets << "(%rbp), %rax\n";
+			outx86<<"movq \t %rax, " << mmap[reg_name] << "(%rbp)\n";
+			// for(auto j : i->scope) cerr << j  <<" ";
+			// cerr << endl << " " << ident(i->val) << endl;
+			insert_temp(i->scope, ident(i->val), tot_regs-1); 
+			temp_offsets -= 8;
+			curr_mem -= 16;
+		}
 		if(s=="main"){
 			puTabs();
+			// main_mem = curr_mem;
 			out3ac<<"Goto main\n";
 		}
-		puTabs();
-		out3ac<<s<<":\n";
 		numins++;
 	}
 	if(root->val=="IfThenElseStatement"){
@@ -2339,28 +2409,41 @@ void gen_3ac(Node* root){
 			gen_3ac(curnode->children[2]);
 			puTabs();
 			blockif[curnode]=blockscalled;
-			out3ac<<"Case t"<<curnode->children[2]->reg<<" : "<<"Goto Block"<<blockscalled++<<'\n';
+			
+			string reg_name = "t" + to_string(curnode->children[2]->reg);
+			outx86<<"movq \t $1, %rax\n";
+			outx86<<"cmpq \t " << mmap[reg_name] << "(%rbp), %rax\n";
+			outx86<<"je \t\t IfBlock" << blockscalled << endl;
+
+			out3ac<<"Case t"<<curnode->children[2]->reg<<" : "<<"Goto IfBlock"<<blockscalled++<<'\n';
 			curnode = curnode->children[6];
 			if(curnode->val=="IfThenStatement"){
 				blockif[curnode]=blockscalled;
 				gen_3ac(curnode->children[2]);
 				puTabs();
-				out3ac<<"Case t"<<curnode->children[2]->reg<<" : "<<"Goto Block"<<blockscalled++<<'\n';
+				string reg_name = "t" + to_string(curnode->children[2]->reg);
+				outx86<<"movq \t $1, %rax\n";
+				outx86<<"cmpq \t " << mmap[reg_name] << "(%rbp), %rax\n";
+				outx86<<"je \t\t IfBlock" << blockscalled << endl;
+				out3ac<<"Case t"<<curnode->children[2]->reg<<" : "<<"Goto IfBlock"<<blockscalled++<<'\n';
 			}else if(curnode->val=="Block"){
 				blockif[curnode]=blockscalled;
 				puTabs();
-				out3ac<<"Goto Block"<<blockscalled++<<'\n';
+				outx86<<"jmp \t IfBlock" << blockscalled << endl;
+				out3ac<<"Goto IfBlock"<<blockscalled++<<'\n';
 			}
 		}
 
 		for(auto child:root->children){
 			if(child->val=="Block"){
 				puTabs();
-				out3ac<<"Block"<<getMyif(child)<<": \n";
+				outx86<<"IfBlock"<<getMyif(child)<<": \n";
+				out3ac<<"IfBlock"<<getMyif(child)<<": \n";
 				numins++;
 				gen_3ac(child);
 				puTabs();
-				out3ac<<"Goto EndIfBlock"<<getRecentLoopif(root)<<'\n';
+				outx86<<"jmp \t EndIfBlock"<<getRecentLoopif(root)<<"\n";
+				out3ac<<"Goto EndIfBlock"<<getRecentLoopif(root)<<"\n";
 				numins--;
 			}
 		}
@@ -2373,56 +2456,91 @@ void gen_3ac(Node* root){
 			}
 			gen_3ac(root->children[2]);
 			puTabs();
-			out3ac<<"Case t"<<root->children[2]->reg<<" : "<<"Goto Block"<<blockscalled<<'\n';
+			
+			string reg_name = "t" + to_string(root->children[2]->reg);
+			outx86<<"movq \t $1, %rax\n";
+			outx86<<"cmpq \t " << mmap[reg_name] << "(%rbp), %rax\n";
+			outx86<<"je \t\t IfBlock" << blockscalled << endl;
+
+			out3ac<<"Case t"<<root->children[2]->reg<<" : "<<"Goto IfBlock"<<blockscalled<<'\n';
 			puTabs();
-			out3ac<<"Goto EndIfBlock"<<getRecentLoopif(root)<<'\n';
+
+			outx86<<"jmp \t EndIfBlock"<<getRecentLoopif(root)<<"\n";
+			out3ac<<"Goto EndIfBlock"<<getRecentLoopif(root)<<"\n";
 			blockscalled++;
 		}
 		for(auto child:root->children){
 			if(child->val=="Block"){
 				puTabs();
-				out3ac<<"Block"<<getMyif(child)<<": \n";
+				outx86<<"IfBlock"<<getMyif(child)<<": \n";
+				out3ac<<"IfBlock"<<getMyif(child)<<": \n";
 				numins++;
 				gen_3ac(child);
 				puTabs();
-				out3ac<<"Goto EndIfBlock"<<getRecentLoopif(root)<<'\n';
+				outx86<<"jmp \t EndIfBlock"<<getRecentLoopif(root)<<"\n";
+				out3ac<<"Goto EndIfBlock"<<getRecentLoopif(root)<<"\n";
 				numins--;
 			}
 		}
 	}
 	if(root->val=="WhileStatement"){
 		puTabs();
-		out3ac<<"LoopStart"<<blocksgen<<"\n";
+		outx86<<"LoopStart"<<blocksgen<<": \n";
+		out3ac<<"LoopStart"<<blocksgen<<": \n";
 		puTabs();
+
+		outx86<<"jmp \t UpdateLoop"<<blocksgen<<endl;
+		out3ac<<"Goto UpdateLoop"<<blocksgen<<endl;
+		
+		outx86<<"Block"<<blocksgen<<": \n";
 		out3ac<<"Block"<<blocksgen<<": \n";
+
 		blocknum[root]=blocksgen++;
 		blockscalled++;
 		numins++;
 		gen_3ac(root->children[4]);
 		numins--;
 		puTabs();
+		outx86<<"UpdateLoop"<<blocknum[root]<<": \n";
 		out3ac<<"UpdateLoop"<<blocknum[root]<<": \n";
 		gen_3ac(root->children[2]);
 		puTabs();
+
+		string reg_name = "t" + to_string(root->children[2]->reg);
+		outx86<<"movq \t $1, %rax\n";
+		outx86<<"cmpq \t " << mmap[reg_name] << "(%rbp), %rax\n";
+		outx86<<"je \t\t Block" << blocknum[root] << endl;
+
 		out3ac<<"Case t"<<root->children[2]->reg<<" : "<<"Goto Block"<<blocknum[root]<<'\n';
 	}
 	if(root->val=="BasicForStatement"){
 		puTabs();
-		out3ac<<"LoopStart"<<blocksgen<<"\n";
+		out3ac<<"LoopStart"<<blocksgen<<": \n";
+		outx86<<"LoopStart"<<blocksgen<<": \n";
 		if(trim(root->children[2]->val)!="SEMICOLON"){
 			gen_3ac(root->children[2]);
 		}
 		blocknum[root]=blocksgen++;
 		blockscalled++;
 		puTabs();
+		outx86<<"jmp \t ConditionCheck" << blocknum[root] << endl;
+		out3ac<<"Goto ConditionCheck" << blocknum[root] << endl;
+
+		outx86<<"Block"<<blocknum[root]<<": \n";
 		out3ac<<"Block"<<blocknum[root]<<": \n";
 		numins++;
 		gen_3ac((root->children).back());
 		puTabs();
+
+		outx86<<"jmp \t UpdateLoop"<<blocknum[root]<<"\n";
 		out3ac<<"Goto UpdateLoop"<<blocknum[root]<<"\n";
+
 		numins--;
 		puTabs();
+
+		outx86<<"UpdateLoop"<<blocknum[root]<<": \n";
 		out3ac<<"UpdateLoop"<<blocknum[root]<<": \n";
+		
 		numins++;
 		int flag=0;
 		for(auto child:root->children){
@@ -2442,6 +2560,8 @@ void gen_3ac(Node* root){
 		for(auto child:root->children){
 			if(flag==1){
 				if(trim(child->val)!="SEMICOLON"){
+					outx86<<"ConditionCheck" << blocknum[root]<<": \n";
+					out3ac<<"ConditionCheck" << blocknum[root]<<": \n";
 					gen_3ac(child);
 					cond=child;
 				}
@@ -2453,8 +2573,17 @@ void gen_3ac(Node* root){
 		}
 		puTabs();
 		if(cond){
+
+			string reg_name = "t" + to_string(cond->reg);
+			outx86<<"movq \t $1, %rax\n";
+			outx86<<"cmpq \t " << mmap[reg_name] << "(%rbp), %rax\n";
+			outx86<<"je \t\t Block" << blocknum[root] << endl;
+
 			out3ac<<"Case t"<<cond->reg<<" : "<<"Goto Block"<<blocknum[root]<<'\n';
 		}else{
+
+			outx86<<"jmp \t Block"<<blocknum[root]<<'\n'; 
+
 			out3ac<<"Goto Block"<<blocknum[root]<<'\n';
 		}
 	}
@@ -2467,15 +2596,18 @@ void gen_3ac(Node* root){
 			gen_3ac(child);
 		}
 	}
+
 	if(root->val=="IfThenElseStatement" || root->val=="IfThenStatement"){
 		if(root->parent->val!="IfThenElseStatement"){
 			puTabs();
-			out3ac<<"EndIfBlock"<<getRecentLoopif(root)<<'\n';
+			outx86<<"EndIfBlock"<<getRecentLoopif(root)<<": \n";
+			out3ac<<"EndIfBlock"<<getRecentLoopif(root)<<": \n";
 		}
 	}
 	if(root->val=="WhileStatement" || root->val=="BasicForStatement"){
 		puTabs();
-		out3ac<<"LoopEnd"<<blocknum[root]<<"\n";
+		outx86<<"LoopEnd"<<blocknum[root]<<": \n";
+		out3ac<<"LoopEnd"<<blocknum[root]<<": \n";
 	}
 	if(root->val=="MethodInvocation"){
 		root->reg = tot_regs++;
@@ -2484,15 +2616,21 @@ void gen_3ac(Node* root){
 		if(root->children.size()==4){
 			vector<int> v, typev;
 			getParams(root->children[2], v, typev);
-			reverse(v.begin(), v.end());
+			// reverse(v.begin(), v.end());
 			for(auto i:typev){
 				tot_off+=type_sizes[revOffMap[i]];
 			}
 			puTabs();
 			out3ac<<"$sp = $sp - "<<tot_off<<'\n';
+			outx86<<"subq\t "<<"$"<<-1*curr_mem+8 + 16 - (-1*curr_mem+8)%16<<", %rsp\n";
+			int stack_offset = -24;
 			for(int i=0;i<v.size();i++){
 				puTabs();
 			 	out3ac<<"PushParams "<<"t"<<v[i]<<" +"<<newvar<<"($sp)"<<'\n';
+				string reg1 = "t"+to_string(v[i]);
+				outx86<<"movq\t "<<mmap[reg1]<<"(%rbp), %rax\n";
+				outx86<<"movq\t "<<"%rax, "<<stack_offset<<"(%rsp)\n";
+				stack_offset=stack_offset-8;
 				newvar+=type_sizes[revOffMap[typev[i]]];
 			}
 			puTabs();
@@ -2502,6 +2640,11 @@ void gen_3ac(Node* root){
 		puTabs();
 		if(root->children[0]->val != "Name"){
 			out3ac<<"t"<<root->reg<<" = "<<"LCall "<<ident(root->children[0]->val)<<'\n';
+			outx86<<"call\t "<<ident(root->children[0]->val)<<"\n";
+			string reg_name = "t" + to_string(root->reg);
+			mmap[reg_name] = curr_mem - 8;
+			curr_mem -= 8;
+			outx86<<"movq \t %rax, " << mmap[reg_name] << "(%rbp)\n";
 		}else{
 			out3ac<<"PushParams "<<ident(root->children[0]->children[0]->val)<<'\n';
 			to_pop++;
@@ -2516,6 +2659,7 @@ void gen_3ac(Node* root){
 		}
 		puTabs();
 		out3ac<<"$sp = $sp + "<<tot_off<<'\n';
+		outx86<<"addq\t $"<<-1* curr_mem + 16 - (-1* curr_mem) % 16<<", %rsp\n";
 	}else if(root->val=="UnqualifiedClassInstanceCreationExpression"){
 		root->reg = tot_regs++;
 		int to_pop=0, tot_off=8, newvar=0;
@@ -2549,125 +2693,600 @@ void gen_3ac(Node* root){
 		}
 		puTabs();
 		out3ac<<"$sp = $sp + "<<tot_off<<'\n';
+	}else if(root->val=="ArrayCreationExpression"){
+		root->reg = tot_regs++;
+		puTabs();
+		out3ac<<"t"<<root->reg<<" =  4 MULT t" << root->children[2]->children[1]->reg << "\n";
+		
+		string reg_name_2 = "t" + to_string(root->children[2]->children[1]->reg);
+
+		string temp_curr_reg = "t" + to_string(tot_regs++);
+		mmap[temp_curr_reg] = curr_mem - 8;
+		curr_mem -= 8;
+
+		string reg_name = "t" + to_string(root->reg);
+		mmap[reg_name] = curr_mem - 8;
+		curr_mem -= 8;
+
+		outx86<<"movq \t $8, " << mmap[temp_curr_reg] << "(%rbp)\n";
+		outx86<<"movq \t " << mmap[temp_curr_reg] << "(%rbp), %rdx\n";	
+		outx86<<"movq \t " << mmap[reg_name_2] << "(%rbp), %rax\n";
+		outx86<<"imulq \t %rdx, %rax\n";
+		outx86<<"movq \t %rax, %rdi\n";
+		outx86<<"call \t malloc\n";
+		outx86<<"movq \t %rax, " << mmap[reg_name] << "(%rbp)\n";
+		puTabs();
+		out3ac<<"allocmem t" << root->reg << endl;
+	
 	}
 	else if(root->val=="ReturnStatement"){
 		puTabs();
 		if(trim(root->children[1]->val)=="SEMICOLON"){
 			out3ac<<"ret\n";
+			outx86<<"popq \t %rbp\n";
+			outx86<<"ret\n";
 		}else{
+			string cur_reg = "t"+to_string(root->children[1]->reg);
+			outx86<<"movq\t"<<mmap[cur_reg]<<"(%rbp), %rax\n";
+			outx86<<"popq \t %rbp\n";
+			outx86<<"ret\n";
 			out3ac<<"ret t"<<root->children[1]->reg<<'\n';
 		}
 	}
 	else if(trim(root->val)=="CONTINUE"){
 		puTabs();
 		out3ac<<"Goto UpdateLoop"<<getRecentLoop(root)<<'\n';
+		outx86<<"jmp \t UpdateLoop"<<getRecentLoop(root)<<'\n';
 	}
 	else if(trim(root->val)=="BREAK"){
 		puTabs();
 		out3ac<<"Goto LoopEnd"<<getRecentLoop(root)<<'\n';
+		outx86<<"jmp \t LoopEnd"<<getRecentLoop(root)<<'\n';
 	}
 	else if(getLiteral(root->val)!=""){
 		root->reg = tot_regs++;
+		// checkMemory
+		string reg_name = "t" + to_string(root->reg);
+		mmap[reg_name] = curr_mem - 8;
+		curr_mem -= 8;
 		puTabs();
 		out3ac<<"t"<<root->reg<<" = "<<getLiteral(root->val)<<'\n';
+		// outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], " << getLiteral(root->val) << endl;
+		outx86<<"movq \t $" << getLiteral(root->val) << ", " << mmap[reg_name] << "(%rbp)" << endl;
+
 	}
 	else if(check_iden(root->val)){
 		root->reg = tot_regs++;
 		puTabs();
 		out3ac<<"t"<<root->reg<<" = "<<ident(root->val)<<'\n';
+		string reg_name = "t" + to_string(root->reg);
+		mmap[reg_name] = curr_mem - 8;
+		curr_mem -= 8;
+		if(get_temp(root->scope, ident(root->val))!=-1){
+		// if(mmap.find(ident(root->val)) != mmap.end()){
+			string reg_cur = "t"+ to_string(get_temp(root->scope, ident(root->val)));
+			// outx86<<"mov \t rax, " << "DWORD PTR [rbp" << mmap[reg_cur] << "]" << endl;
+			outx86<<"movq \t " << mmap[reg_cur] << "(%rbp), %rax" << endl;
+			// outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], rax" << endl;
+			outx86<<"movq \t %rax, " << mmap[reg_name] << "(%rbp)" << endl;
+		}else{
+			// outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], " << 0 << endl;
+			outx86<<"movq \t $" << 0 << ", " << mmap[reg_name] << "(%rbp)" << endl;
+		}
 	}else if(trim(root->val)=="EQUALTO"){
+		Node* oldRootchild = root->children[0];
+		if(root->children[0]->val == "VariableDeclaratorId"){
+			root->children[0] = root->children[0]->children[0] ;
+		}
 		root->reg = root->children[0]->reg;
-		puTabs();
-		out3ac<<"t"<<root->children[0]->reg<<" = "<<"t"<<root->children[1]->reg<<'\n';
-		puTabs();
-		out3ac<<ident(root->children[0]->val)<<" = "<<"t"<<root->children[0]->reg<<'\n';
+		string reg_name_1 = "t" + to_string(root->children[0]->reg);
+		string reg_name_2 = "t" + to_string(root->children[1]->reg);
+
+		if(root->children[0]->val != "ArrayAccess"){
+			puTabs();
+			out3ac<<"t"<<root->children[0]->reg<<" = "<<"t"<<root->children[1]->reg<<'\n';
+			// outx86<<"mov \t rax, " << "DWORD PTR [rbp" << mmap[reg_name_2] << "]" << endl;
+			// outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name_1] << "], rax"<< endl;
+			outx86<<"movq \t " << mmap[reg_name_2] << "(%rbp), %rax" << endl;
+			outx86<<"movq \t %rax, " << mmap[reg_name_1] << "(%rbp)" << endl;
+			puTabs();
+			out3ac<<ident(root->children[0]->val)<<" = "<<"t"<<root->children[0]->reg<<'\n';
+			// cerr << ident(root->children[0]->val) << endl;
+			
+			if(get_temp(root->scope, ident(root->children[0]->val))==-1){
+				insert_temp(root->scope, ident(root->children[0]->val), root->children[0]->reg);
+				mmap[ident(root->children[0]->val)] = curr_mem - 8;
+			}
+
+			string cur_reg = "t"+to_string(get_temp(root->children[0]->scope, ident(root->children[0]->val)));
+
+			outx86<<"movq \t " << mmap[reg_name_1] << "(%rbp), %rax" << endl;
+			outx86<<"movq \t %rax, " << mmap[cur_reg] << "(%rbp)" << endl;
+		}
+		else{
+			// string reg_arr = "t" + to_string(root->children[0]->children[0]->reg);
+			// out3ac<<"arr=sumn\n";
+			puTabs();
+			out3ac<<"t"<<root->children[0]->reg<<" = "<<"t"<<root->children[1]->reg<<'\n';
+			// outx86<<"mov \t rax, " << "DWORD PTR [rbp" << mmap[reg_name_2] << "]" << endl;
+			// outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name_1] << "], rax"<< endl;
+
+			if(root->children[1]->val != "ArrayAccess"){
+				outx86<<"movq \t " << mmap[reg_name_2] << "(%rbp), %rdx" << endl;
+				outx86<<"movq \t " << mmap[reg_name_1] << "(%rbp), %rax" << endl;
+				outx86<<"movq \t %rdx, 0(%rax)\n";
+			}else{
+				outx86<<"movq \t " << mmap[reg_name_2] << "(%rbp), %rax" << endl;
+				outx86<<"movq \t 0(%rax), %rdx\n";  
+				outx86<<"movq \t " << mmap[reg_name_1] << "(%rbp), %rax" << endl;
+				outx86<<"movq \t %rdx, 0(%rax)\n";
+			}
+		}
+		root->children[0] = oldRootchild;
+		// curr_mem -= 8;
+		// outx86<<"mov \t rax, " << "DWORD PTR [rbp" << mmap[reg_name_1] << "]" << endl;
+		// outx86<<"mov \t DWORD PTR [rbp" << mmap[ident(root->children[0]->val)] << "], rax" << endl;
 	}
 	else if(trim(root->val)=="PLUSET"){
 		root->reg = tot_regs++;
 		puTabs();
+		string reg_name_1 = "t" + to_string(root->children[0]->reg);
+		string reg_name_2 = "t" + to_string(root->children[1]->reg);
+		// outx86<<"mov \t rax, " << "DWORD PTR [rbp" << mmap[reg_name_1] << "]" << endl;
+		// outx86<<"mov \t rdx, " << "DWORD PTR [rbp" << mmap[reg_name_2] << "]" << endl;
+		outx86<<"movq \t " << mmap[reg_name_1] << "(%rbp), %rax" << endl;
+		outx86<<"movq \t " << mmap[reg_name_2] << "(%rbp), %rdx" << endl;
+		outx86<<"addq \t %rdx, %rax\n";
+		string reg_name = "t" + to_string(root->reg);
+		mmap[reg_name] = curr_mem - 8;
+		curr_mem -= 8;
+		outx86<<"movq \t %rax, " << mmap[reg_name] << "(%rbp)" << endl;
+		// outx86<<"mov \t DWORD PTR [rbp" << mmap[reg_name] << "], rax\n";
 		out3ac<<"t"<<root->reg<<" = "<<"t"<<root->children[0]->reg<<" PLUS "<<"t"<<root->children[1]->reg<<'\n';
 		puTabs();
+		if(get_temp(root->scope, ident(root->children[0]->val))==-1){
+			insert_temp(root->scope, ident(root->children[0]->val), root->children[0]->reg);
+			mmap[ident(root->children[0]->val)] = curr_mem - 8;
+		}
+		string cur_reg = "t"+to_string(get_temp(root->children[0]->scope, ident(root->children[0]->val)));
+
+		outx86<<"movq \t " << mmap[reg_name] << "(%rbp), %rax" << endl;
+		outx86<<"movq \t %rax, " << mmap[cur_reg] << "(%rbp)" << endl;
+		// curr_mem -= 8;
+		// outx86<<"mov \t rax, " << "DWORD PTR [rbp" << mmap[reg_name] << "]" << endl;
+		// outx86<<"mov \t DWORD PTR [rbp" << mmap[ident(root->children[0]->val)] << "], rax" << endl;
 		out3ac<<ident(root->children[0]->val)<<" = "<<"t"<<root->reg<<'\n';
 	}
 	else if(trim(root->val)=="MINUSET"){
 		root->reg = tot_regs++;
 		puTabs();
+		string reg_name_1 = "t" + to_string(root->children[0]->reg);
+		string reg_name_2 = "t" + to_string(root->children[1]->reg);
+		outx86<<"movq \t " << mmap[reg_name_1] << "(%rbp), %rax" << endl;
+		outx86<<"movq \t " << mmap[reg_name_2] << "(%rbp), %rdx" << endl;
+		outx86<<"subq \t %rdx, %rax\n";
+		string reg_name = "t" + to_string(root->reg);
+		mmap[reg_name] = curr_mem - 8;
+		curr_mem -= 8;
+		outx86<<"movq \t %rax, " << mmap[reg_name] << "(%rbp)" << endl;
 		out3ac<<"t"<<root->reg<<" = "<<"t"<<root->children[0]->reg<<" MINUS "<<"t"<<root->children[1]->reg<<'\n';
 		puTabs();
+		if(get_temp(root->scope, ident(root->children[0]->val))==-1){
+			insert_temp(root->scope, ident(root->children[0]->val), root->children[0]->reg);
+			mmap[ident(root->children[0]->val)] = curr_mem - 8;
+		}
+		string cur_reg = "t"+to_string(get_temp(root->children[0]->scope, ident(root->children[0]->val)));
+
+		outx86<<"movq \t " << mmap[reg_name] << "(%rbp), %rax" << endl;
+		outx86<<"movq \t %rax, " << mmap[cur_reg] << "(%rbp)" << endl;
+		// curr_mem -= 8;
+		// outx86<<"mov \t rax, " << "DWORD PTR [rbp" << mmap[reg_name] << "]" << endl;
+		// outx86<<"mov \t DWORD PTR [rbp" << mmap[ident(root->children[0]->val)] << "], rax" << endl;
 		out3ac<<ident(root->children[0]->val)<<" = "<<"t"<<root->reg<<'\n';
 	}
 	else if(trim(root->val)=="MULTET"){
 		root->reg = tot_regs++;
 		puTabs();
+		string reg_name_1 = "t" + to_string(root->children[0]->reg);
+		string reg_name_2 = "t" + to_string(root->children[1]->reg);
+		outx86<<"movq \t " << mmap[reg_name_1] << "(%rbp), %rax" << endl;
+		outx86<<"movq \t " << mmap[reg_name_2] << "(%rbp), %rdx" << endl;
+		outx86<<"imulq \t %rdx, %rax\n";
+		string reg_name = "t" + to_string(root->reg);
+		mmap[reg_name] = curr_mem - 8;
+		curr_mem -= 8;
+		outx86<<"movq \t %rax, " << mmap[reg_name] << "(%rbp)" << endl;
 		out3ac<<"t"<<root->reg<<" = "<<"t"<<root->children[0]->reg<<" MULT "<<"t"<<root->children[1]->reg<<'\n';
 		puTabs();
+		if(get_temp(root->scope, ident(root->children[0]->val))==-1){
+			insert_temp(root->scope, ident(root->children[0]->val), root->children[0]->reg);
+			mmap[ident(root->children[0]->val)] = curr_mem - 8;
+		}
+		string cur_reg = "t"+to_string(get_temp(root->children[0]->scope, ident(root->children[0]->val)));
+
+		outx86<<"movq \t " << mmap[reg_name] << "(%rbp), %rax" << endl;
+		outx86<<"movq \t %rax, " << mmap[cur_reg] << "(%rbp)" << endl;
+		// curr_mem -= 8;
+		// outx86<<"mov \t rax, " << "DWORD PTR [rbp" << mmap[reg_name] << "]" << endl;
+		// outx86<<"mov \t DWORD PTR [rbp" << mmap[ident(root->children[0]->val)] << "], rax" << endl;
 		out3ac<<ident(root->children[0]->val)<<" = "<<"t"<<root->reg<<'\n';
 	}
 	else if(trim(root->val)=="DIVET"){
 		root->reg = tot_regs++;
 		puTabs();
+		string reg_name_1 = "t" + to_string(root->children[0]->reg);
+		string reg_name_2 = "t" + to_string(root->children[1]->reg);
+		outx86<<"movq \t " << mmap[reg_name_1] << "(%rbp), %rax" << endl;
+		outx86<<"cltd \t \n";
+		outx86<<"idivq \t " << mmap[reg_name_2] << "(%rbp)" << endl;
+		string reg_name = "t" + to_string(root->reg);
+		mmap[reg_name] = curr_mem - 8;
+		curr_mem -= 8;
+		outx86<<"movq \t %rax, " << mmap[reg_name] << "(%rbp)" << endl;
 		out3ac<<"t"<<root->reg<<" = "<<"t"<<root->children[0]->reg<<" DIVIDE "<<"t"<<root->children[1]->reg<<'\n';
 		puTabs();
+		if(get_temp(root->scope, ident(root->children[0]->val))==-1){
+			insert_temp(root->scope, ident(root->children[0]->val), root->children[0]->reg);
+			mmap[ident(root->children[0]->val)] = curr_mem - 8;
+		}
+		string cur_reg = "t"+to_string(get_temp(root->children[0]->scope, ident(root->children[0]->val)));
+
+		outx86<<"movq \t " << mmap[reg_name] << "(%rbp), %rax" << endl;
+		outx86<<"movq \t %rax, " << mmap[cur_reg] << "(%rbp)" << endl;
+		// curr_mem -= 8;
+		// outx86<<"mov \t rax, " << "DWORD PTR [rbp" << mmap[reg_name] << "]" << endl;
+		// outx86<<"mov \t DWORD PTR [rbp" << mmap[ident(root->children[0]->val)] << "], rax" << endl;
 		out3ac<<ident(root->children[0]->val)<<" = "<<"t"<<root->reg<<'\n';
 	}
 	else if(trim(root->val)=="ANDET"){
 		root->reg = tot_regs++;
 		puTabs();
+		string reg_name_1 = "t" + to_string(root->children[0]->reg);
+		string reg_name_2 = "t" + to_string(root->children[1]->reg);
+		outx86<<"movq \t " << mmap[reg_name_1] << "(%rbp), %rax" << endl;
+		outx86<<"movq \t " << mmap[reg_name_2] << "(%rbp), %rdx" << endl;
+		outx86<<"andq \t %rdx, %rax\n";
+		string reg_name = "t" + to_string(root->reg);
+		mmap[reg_name] = curr_mem - 8;
+		curr_mem -= 8;
+		outx86<<"movq \t %rax, " << mmap[reg_name] << "(%rbp)" << endl;
 		out3ac<<"t"<<root->reg<<" = "<<"t"<<root->children[0]->reg<<" AND "<<"t"<<root->children[1]->reg<<'\n';
 		puTabs();
+		if(get_temp(root->scope, ident(root->children[0]->val))==-1){
+			insert_temp(root->scope, ident(root->children[0]->val), root->children[0]->reg);
+			mmap[ident(root->children[0]->val)] = curr_mem - 8;
+		}
+		string cur_reg = "t"+to_string(get_temp(root->children[0]->scope, ident(root->children[0]->val)));
+
+		outx86<<"movq \t " << mmap[reg_name] << "(%rbp), %rax" << endl;
+		outx86<<"movq \t %rax, " << mmap[cur_reg] << "(%rbp)" << endl;
+		// curr_mem -= 8;
+		// outx86<<"mov \t rax, " << "DWORD PTR [rbp" << mmap[reg_name] << "]" << endl;
+		// outx86<<"mov \t DWORD PTR [rbp" << mmap[ident(root->children[0]->val)] << "], rax" << endl;
 		out3ac<<ident(root->children[0]->val)<<" = "<<"t"<<root->reg<<'\n';
 	}
 	else if(root->val=="PostIncrementExpression"){
 		root->reg = tot_regs++;
 		puTabs();
 		out3ac<<"t"<<tot_regs++<<" = "<<1<<'\n';
+		string reg_name_temp = "t" + to_string(root->reg);
+		mmap[reg_name_temp] = curr_mem - 8;
+		curr_mem -= 8;
+		outx86<<"movq \t $1, " << mmap[reg_name_temp] << "(%rbp)\n";
 		puTabs(); 
-		out3ac<<"t"<<root->reg<<" = "<<"t"<<root->children[0]->reg<<" PLUS "<<tot_regs-1<<'\n';
+		string reg_name_1 = "t" + to_string(root->children[0]->reg);
+		out3ac<<"t"<<root->reg<<" = "<<"t"<<root->children[0]->reg<<" PLUS "<< "t" << tot_regs-1<<'\n';
+		outx86<<"movq \t " << mmap[reg_name_1] << "(%rbp), %rax" << endl;
+		outx86<<"movq \t " << mmap[reg_name_temp] << "(%rbp), %rdx" << endl;
+		outx86<<"addq \t %rdx, %rax\n";
+		string reg_name = "t" + to_string(root->reg);
+		mmap[reg_name] = curr_mem - 8;
+		curr_mem -= 8;
+		outx86<<"movq \t %rax, " << mmap[reg_name] << "(%rbp)" << endl;
 		puTabs();
+		if(get_temp(root->scope, ident(root->children[0]->val))==-1){
+			insert_temp(root->scope, ident(root->children[0]->val), root->children[0]->reg);
+			mmap[ident(root->children[0]->val)] = curr_mem - 8;
+		}
+		string cur_reg = "t"+to_string(get_temp(root->children[0]->scope, ident(root->children[0]->val)));
+
+		outx86<<"movq \t " << mmap[reg_name] << "(%rbp), %rax" << endl;
+		outx86<<"movq \t %rax, " << mmap[cur_reg] << "(%rbp)" << endl;
 		out3ac<<ident(root->children[0]->val)<<" = "<<"t"<<root->reg<<'\n';
 	}
 	else if(root->val=="PreIncrementExpression"){
 		root->reg = tot_regs++;
 		puTabs();
 		out3ac<<"t"<<tot_regs++<<" = "<<1<<'\n';
+		string reg_name_temp = "t" + to_string(root->reg);
+		mmap[reg_name_temp] = curr_mem - 8;
+		curr_mem -= 8;
+		outx86<<"movq \t $1, " << mmap[reg_name_temp] << "(%rbp)\n";
 		puTabs(); 
-		out3ac<<"t"<<root->reg<<" = "<<"t"<<root->children[1]->reg<<" PLUS "<<tot_regs-1<<'\n';
+		string reg_name_1 = "t" + to_string(root->children[1]->reg);
+		out3ac<<"t"<<root->reg<<" = "<<"t"<<root->children[1]->reg<<" PLUS "<< "t" << tot_regs-1<<'\n';
+		outx86<<"movq \t " << mmap[reg_name_1] << "(%rbp), %rax" << endl;
+		outx86<<"movq \t " << mmap[reg_name_temp] << "(%rbp), %rdx" << endl;
+		outx86<<"addq \t %rdx, %rax\n";
+		string reg_name = "t" + to_string(root->reg);
+		mmap[reg_name] = curr_mem - 8;
+		curr_mem -= 8;
+		outx86<<"movq \t %rax, " << mmap[reg_name] << "(%rbp)" << endl;
 		puTabs();
+		if(get_temp(root->scope, ident(root->children[1]->val))==-1){
+			insert_temp(root->scope, ident(root->children[1]->val), root->children[1]->reg);
+			mmap[ident(root->children[1]->val)] = curr_mem - 8;
+		}
+		string cur_reg = "t"+to_string(get_temp(root->children[1]->scope, ident(root->children[1]->val)));
+
+		outx86<<"movq \t " << mmap[reg_name] << "(%rbp), %rax" << endl;
+		outx86<<"movq \t %rax, " << mmap[cur_reg] << "(%rbp)" << endl;
 		out3ac<<ident(root->children[1]->val)<<" = "<<"t"<<root->reg<<'\n';
 	}
 	else if(root->val=="PostDecrementExpression"){
 		root->reg = tot_regs++;
 		puTabs();
 		out3ac<<"t"<<tot_regs++<<" = "<<1<<'\n';
+		string reg_name_temp = "t" + to_string(root->reg);
+		mmap[reg_name_temp] = curr_mem - 8;
+		curr_mem -= 8;
+		outx86<<"movq \t $1, " << mmap[reg_name_temp] << "(%rbp)\n";
 		puTabs(); 
-		out3ac<<"t"<<root->reg<<" = "<<"t"<<root->children[0]->reg<<" MINUS "<<tot_regs-1<<'\n';
+		string reg_name_1 = "t" + to_string(root->children[0]->reg);
+		out3ac<<"t"<<root->reg<<" = "<<"t"<<root->children[0]->reg<<" MINUS "<< "t" << tot_regs-1<<'\n';
+		outx86<<"movq \t " << mmap[reg_name_1] << "(%rbp), %rax" << endl;
+		outx86<<"movq \t " << mmap[reg_name_temp] << "(%rbp), %rdx" << endl;
+		outx86<<"subq \t %rdx, %rax\n";
+		string reg_name = "t" + to_string(root->reg);
+		mmap[reg_name] = curr_mem - 8;
+		curr_mem -= 8;
+		outx86<<"movq \t %rax, " << mmap[reg_name] << "(%rbp)" << endl;
 		puTabs();
+		if(get_temp(root->scope, ident(root->children[0]->val))==-1){
+			insert_temp(root->scope, ident(root->children[0]->val), root->children[0]->reg);
+			mmap[ident(root->children[0]->val)] = curr_mem - 8;
+		}
+		string cur_reg = "t"+to_string(get_temp(root->children[0]->scope, ident(root->children[0]->val)));
+
+		outx86<<"movq \t " << mmap[reg_name] << "(%rbp), %rax" << endl;
+		outx86<<"movq \t %rax, " << mmap[cur_reg] << "(%rbp)" << endl;
 		out3ac<<ident(root->children[0]->val)<<" = "<<"t"<<root->reg<<'\n';
 	}
 	else if(root->val=="PreDecrementExpression"){
 		root->reg = tot_regs++;
 		puTabs();
 		out3ac<<"t"<<tot_regs++<<" = "<<1<<'\n';
+		string reg_name_temp = "t" + to_string(root->reg);
+		mmap[reg_name_temp] = curr_mem - 8;
+		curr_mem -= 8;
+		outx86<<"movq \t $1, " << mmap[reg_name_temp] << "(%rbp)\n";
 		puTabs(); 
-		out3ac<<"t"<<root->reg<<" = "<<"t"<<root->children[1]->reg<<" MINUS "<<tot_regs-1<<'\n';
+		string reg_name_1 = "t" + to_string(root->children[1]->reg);
+		out3ac<<"t"<<root->reg<<" = "<<"t"<<root->children[1]->reg<<" MINUS "<< "t" << tot_regs-1<<'\n';
+		outx86<<"movq \t " << mmap[reg_name_1] << "(%rbp), %rax" << endl;
+		outx86<<"movq \t " << mmap[reg_name_temp] << "(%rbp), %rdx" << endl;
+		outx86<<"subq \t %rdx, %rax\n";
+		string reg_name = "t" + to_string(root->reg);
+		mmap[reg_name] = curr_mem - 8;
+		curr_mem -= 8;
+		outx86<<"movq \t %rax, " << mmap[reg_name] << "(%rbp)" << endl;
 		puTabs();
+		if(get_temp(root->scope, ident(root->children[1]->val))==-1){
+			insert_temp(root->scope, ident(root->children[1]->val), root->children[1]->reg);
+			mmap[ident(root->children[1]->val)] = curr_mem - 8;
+		}
+		string cur_reg = "t"+to_string(get_temp(root->children[1]->scope, ident(root->children[1]->val)));
+
+		outx86<<"movq \t " << mmap[reg_name] << "(%rbp), %rax" << endl;
+		outx86<<"movq \t %rax, " << mmap[cur_reg] << "(%rbp)" << endl;
 		out3ac<<ident(root->children[1]->val)<<" = "<<"t"<<root->reg<<'\n';
 	}
 	else if(root->val=="ArrayAccess"){
 		int treg = tot_regs++;
 		puTabs();
-		out3ac<<"t"<<treg<<" = "<<sizemap[revMap[root->children[0]->nodetype]]<<'\n';
+		out3ac<<"t"<<treg<<" = "<<8<<'\n';
+
+		string treg_name = "t" + to_string(treg);
+		mmap[treg_name] = curr_mem - 8;
+		curr_mem -= 8;
+
+		outx86<<"movq \t $8, " << mmap[treg_name] << "(%rbp)\n";
+
 		int treg1 = tot_regs++;
+
+		string treg1_name = "t" + to_string(treg1);
+		mmap[treg1_name] = curr_mem - 8;
+		curr_mem -= 8;
+
+		string reg_name_2 = "t" + to_string(root->children[2]->reg);
+		string reg_name_1 = "t" + to_string(root->children[0]->reg);
+		outx86<<"movq \t " << mmap[treg_name] << "(%rbp), %rdx\n"; 
+		outx86<<"movq \t " << mmap[reg_name_2] << "(%rbp), %rax\n"; 
+		outx86<<"imulq \t %rdx, %rax\n";
+		outx86<<"movq \t %rax, " << mmap[treg1_name] << "(%rbp)\n";
 		puTabs();
 		out3ac<<"t"<<treg1<<" = t"<<treg<<" MULT t"<<(root->children[2]->reg)<<'\n';
 		root->reg=tot_regs++;
-		puTabs(); 
+
+		string reg_name = "t" + to_string(root->reg);
+		mmap[reg_name] = curr_mem - 8;
+		curr_mem -= 8;
+
+		
+		if(root->parent->children[0]->val == "ArrayAccess" && root->parent->val == "EQUALTO__="){
+			outx86<<"movq \t " << mmap[treg1_name] << "(%rbp), %rdx\n";
+			outx86<<"movq \t " << mmap[reg_name_1] << "(%rbp), %rax\n";
+			outx86<<"addq \t %rdx, %rax\n";
+			outx86<<"movq \t %rax, " << mmap[reg_name] << "(%rbp)\n";
+		}else{
+			outx86<<"movq \t " << mmap[treg1_name] << "(%rbp), %rdx\n";
+			outx86<<"movq \t " << mmap[reg_name_1] << "(%rbp), %rax\n";
+			outx86<<"addq \t %rdx, %rax\n";
+			outx86<<"movq \t 0(%rax), %r13\n";
+			outx86<<"movq \t %r13, " << mmap[reg_name] << "(%rbp)\n";
+		}
+		puTabs();		
 		out3ac<<"t"<<root->reg<<" = "<<"t"<<root->children[0]->reg<<"[t"<<treg1<<"]\n";
 	}
 	else if(ops.find(trim(root->val))!=ops.end()){
 		root->reg = tot_regs++;
 		puTabs();
+		string reg_name_1 = "t" + to_string(root->children[0]->reg);
+		string reg_name_2 = "t" + to_string(root->children[1]->reg);
 		out3ac<<"t"<<root->reg<<" = "<<"t"<<root->children[0]->reg<<" "<<trim(root->val)<<" "<<"t"<<root->children[1]->reg<<'\n';
+		if(trim(root->val) == "PLUS"){
+			outx86<<"movq \t " << mmap[reg_name_1] << "(%rbp), %rax" << endl;
+			outx86<<"movq \t " << mmap[reg_name_2] << "(%rbp), %rdx" << endl;
+			outx86<<"addq \t %rdx, %rax\n";
+			string reg_name = "t" + to_string(root->reg);
+			mmap[reg_name] = curr_mem - 8;
+			curr_mem -= 8;
+			outx86<<"movq \t %rax, " << mmap[reg_name] << "(%rbp)" << endl;
+		}
+		if(trim(root->val) == "MULT"){
+			outx86<<"movq \t " << mmap[reg_name_1] << "(%rbp), %rax" << endl;
+			outx86<<"movq \t " << mmap[reg_name_2] << "(%rbp), %rdx" << endl;
+			outx86<<"imulq \t %rdx, %rax\n";
+			string reg_name = "t" + to_string(root->reg);
+			mmap[reg_name] = curr_mem - 8;
+			curr_mem -= 8;
+			outx86<<"movq \t %rax, " << mmap[reg_name] << "(%rbp)" << endl;
+		}
+		if(trim(root->val) == "MINUS"){
+			outx86<<"movq \t " << mmap[reg_name_1] << "(%rbp), %rax" << endl;
+			outx86<<"movq \t " << mmap[reg_name_2] << "(%rbp), %rdx" << endl;
+			outx86<<"subq \t %rdx, %rax\n";
+			string reg_name = "t" + to_string(root->reg);
+			mmap[reg_name] = curr_mem - 8;
+			curr_mem -= 8;
+			outx86<<"movq \t %rax, " << mmap[reg_name] << "(%rbp)" << endl;
+		}
+		if(trim(root->val) == "BITAND"){
+			outx86<<"movq \t " << mmap[reg_name_1] << "(%rbp), %rax" << endl;
+			outx86<<"movq \t " << mmap[reg_name_2] << "(%rbp), %rdx" << endl;
+			outx86<<"andq \t %rdx, %rax\n";
+			string reg_name = "t" + to_string(root->reg);
+			mmap[reg_name] = curr_mem - 8;
+			curr_mem -= 8;
+			outx86<<"movq \t %rax, " << mmap[reg_name] << "(%rbp)" << endl;
+		}
+		if(trim(root->val) == "BITOR"){
+			outx86<<"movq \t " << mmap[reg_name_1] << "(%rbp), %rax" << endl;
+			outx86<<"movq \t " << mmap[reg_name_2] << "(%rbp), %rdx" << endl;
+			outx86<<"orq \t %rdx, %rax\n";
+			string reg_name = "t" + to_string(root->reg);
+			mmap[reg_name] = curr_mem - 8;
+			curr_mem -= 8;
+			outx86<<"movq \t %rax, " << mmap[reg_name] << "(%rbp)" << endl;
+		}
+		if(trim(root->val) == "POW"){
+			outx86<<"movq \t " << mmap[reg_name_1] << "(%rbp), %rax" << endl;
+			outx86<<"movq \t " << mmap[reg_name_2] << "(%rbp), %rdx" << endl;
+			outx86<<"xorq \t %rdx, %rax\n";
+			string reg_name = "t" + to_string(root->reg);
+			mmap[reg_name] = curr_mem - 8;
+			curr_mem -= 8;
+			outx86<<"movq \t %rax, " << mmap[reg_name] << "(%rbp)" << endl;
+		}
+		if(trim(root->val) == "RIGHTSHIFT"){
+			outx86<<"movq \t " << mmap[reg_name_2] << "(%rbp), %rax" << endl;
+			outx86<<"movq \t " << mmap[reg_name_1] << "(%rbp), %rdx" << endl;
+			outx86<<"movq \t %rax, %rcx\n";
+			outx86<<"sarq \t %cq, %rdx\n";
+			string reg_name = "t" + to_string(root->reg);
+			mmap[reg_name] = curr_mem - 8;
+			curr_mem -= 8;
+			outx86<<"movq \t %rdx, " << mmap[reg_name] << "(%rbp)" << endl;
+		}
+		if(trim(root->val) == "LEFTSHIFT"){
+			outx86<<"movq \t " << mmap[reg_name_2] << "(%rbp), %rax" << endl;
+			outx86<<"movq \t " << mmap[reg_name_1] << "(%rbp), %rdx" << endl;
+			outx86<<"movq \t %rax, %rcx\n";
+			outx86<<"salq \t %cq, %rdx\n";
+			string reg_name = "t" + to_string(root->reg);
+			mmap[reg_name] = curr_mem - 8;
+			curr_mem -= 8;
+			outx86<<"movq \t %rdx, " << mmap[reg_name] << "(%rbp)" << endl;
+		}
+		if(trim(root->val) == "DIVIDE"){
+			outx86<<"movq \t " << mmap[reg_name_1] << "(%rbp), %rax" << endl;
+			outx86<<"cltd \t \n";
+			outx86<<"idivq \t " << mmap[reg_name_2] << "(%rbp)" << endl;
+			string reg_name = "t" + to_string(root->reg);
+			mmap[reg_name] = curr_mem - 8;
+			curr_mem -= 8;
+			outx86<<"movq \t %rax, " << mmap[reg_name] << "(%rbp)" << endl;
+
+		}
+		if(trim(root->val) == "MODULO"){
+			outx86<<"movq \t " << mmap[reg_name_1] << "(%rbp), %rax" << endl;
+			outx86<<"cltd \t \n";
+			outx86<<"idivq \t " << mmap[reg_name_2] << "(%rbp)" << endl;
+			string reg_name = "t" + to_string(root->reg);
+			mmap[reg_name] = curr_mem - 8;
+			curr_mem -= 8;
+			outx86<<"movq \t %rdx, " << mmap[reg_name] << "(%rbp)" << endl;
+		}
+		if(trim(root->val) == "EQ"){
+			outx86<<"movq \t " << mmap[reg_name_1] << "(%rbp), %rax" << endl;
+			outx86<<"cmpq \t " << mmap[reg_name_2] << "(%rbp), %rax" << endl;
+			outx86<<"sete \t %al\n";
+			outx86<<"movzbq \t %al, %rax\n";
+			string reg_name = "t" + to_string(root->reg);
+			mmap[reg_name] = curr_mem - 8;
+			curr_mem -= 8;
+			outx86<<"movq \t %rax, " << mmap[reg_name] << "(%rbp)" << endl;
+		}
+		if(trim(root->val) == "LT"){
+			outx86<<"movq \t " << mmap[reg_name_1] << "(%rbp), %rax" << endl;
+			outx86<<"cmpq \t " << mmap[reg_name_2] << "(%rbp), %rax" << endl;
+			outx86<<"setl \t %al\n";
+			outx86<<"movzbq \t %al, %rax\n";
+			string reg_name = "t" + to_string(root->reg);
+			mmap[reg_name] = curr_mem - 8;
+			curr_mem -= 8;
+			outx86<<"movq \t %rax, " << mmap[reg_name] << "(%rbp)" << endl;
+		}
+		if(trim(root->val) == "GT"){
+			outx86<<"movq \t " << mmap[reg_name_1] << "(%rbp), %rax" << endl;
+			outx86<<"cmpq \t " << mmap[reg_name_2] << "(%rbp), %rax" << endl;
+			outx86<<"setg \t %al\n";
+			outx86<<"movzbq \t %al, %rax\n";
+			string reg_name = "t" + to_string(root->reg);
+			mmap[reg_name] = curr_mem - 8;
+			curr_mem -= 8;
+			outx86<<"movq \t %rax, " << mmap[reg_name] << "(%rbp)" << endl;
+		}
+		if(trim(root->val) == "LEQ"){
+			outx86<<"movq \t " << mmap[reg_name_1] << "(%rbp), %rax" << endl;
+			outx86<<"cmpq \t " << mmap[reg_name_2] << "(%rbp), %rax" << endl;
+			outx86<<"setle \t %al\n";
+			outx86<<"movzbq \t %al, %rax\n";
+			string reg_name = "t" + to_string(root->reg);
+			mmap[reg_name] = curr_mem - 8;
+			curr_mem -= 8;
+			outx86<<"movq \t %rax, " << mmap[reg_name] << "(%rbp)" << endl;
+		}
+		if(trim(root->val) == "GEQ"){
+			outx86<<"movq \t " << mmap[reg_name_1] << "(%rbp), %rax" << endl;
+			outx86<<"cmpq \t " << mmap[reg_name_2] << "(%rbp), %rax" << endl;
+			outx86<<"setge \t %al\n";
+			outx86<<"movzbq \t %al, %rax\n";
+			string reg_name = "t" + to_string(root->reg);
+			mmap[reg_name] = curr_mem - 8;
+			curr_mem -= 8;
+			outx86<<"movq \t %rax, " << mmap[reg_name] << "(%rbp)" << endl;
+		}
+		if(trim(root->val) == "NEQ"){
+			outx86<<"movq \t " << mmap[reg_name_1] << "(%rbp), %rax" << endl;
+			outx86<<"cmpq \t " << mmap[reg_name_2] << "(%rbp), %rax" << endl;
+			outx86<<"setne \t %al\n";
+			outx86<<"movzbq \t %al, %rax\n";
+			string reg_name = "t" + to_string(root->reg);
+			mmap[reg_name] = curr_mem - 8;
+			curr_mem -= 8;
+			outx86<<"movq \t %rax, " << mmap[reg_name] << "(%rbp)" << endl;
+		}
 	}
 	if(root->val=="ClassDeclaration"){
 		numins--;
@@ -2806,13 +3425,14 @@ int main(int argc, char* argv[]){
 		init_map();
 		fill_sizemap();
 		out3ac.open("3ac.txt");
+		outx86.open("x86.s");
+		outx86<<".globl main\n";
 		string inp = argv[1];
 		string outp = argv[2];
         freopen(inp.c_str(), "r", stdin);
         freopen(outp.c_str(), "w", stdout);
         yyparse();
 		traverse(root);
-		table_dump();
         cout<<"strict digraph {\n";
         make_ast(root, root, 0);
         revise_ast(root, root, 0);
@@ -2828,6 +3448,7 @@ int main(int argc, char* argv[]){
 		insert_offests();
 
 		gen_3ac(root);
+		table_dump();
 
 		main_dump();
     }catch (...){

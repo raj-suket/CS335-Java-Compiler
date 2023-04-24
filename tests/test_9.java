@@ -1,31 +1,25 @@
-/* Iterative Function to calculate (x^y)%p in O(log y) */
-class GFG {
-	static int power(int x, int y, int p)
-	{
-		int res = 1; // Initialize result
-
-		while (y > 0) {
-
-			// If y is odd, multiply x with result
-			if ((y & 1) != 0)
-				res = res * x;
-
-			// y must be even now
-			y = y >> 1; // y = y/2
-			x = x * x; // Change x to x^2
-		}
-		return res % p;
-	}
-
-	public static void main(String[] args)
-	{
-		int x = 2;
-		int y = 5;
-		int p = 13;
-
-		int mod = power(x, y, p);
-		System.out.print("Power is " + mod);
-	}
+public class append{
+    int main()
+    {
+        int arr[] = new int[5];
+        arr[0] = 5;
+        arr[1] = 3;
+        arr[2] = 1;
+        arr[3] = 2;
+        arr[4] = 4;
+        for(int i=0;i<5;i++)
+        {
+            for(int j=i+1;j<5;j++)
+            {
+                if(arr[j]<arr[i])
+                {
+                    int temp = arr[i];
+                    arr[i]=arr[j];
+                    arr[j]=temp;
+                }
+            }
+        }
+        int y = arr[4];
+        return 0;
+    }
 }
-
-// This code is contributed by Dharanendra L V.

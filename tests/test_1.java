@@ -1,10 +1,14 @@
 public class append{
-    int sum(int a, int b){
-        float x;
-        return 1;
+    int calculate(int a, int b)
+    {
+        int mod = 1000000007;
+        int y = a*a%mod + b*b%mod + 2*a*b%mod;
+        int z = y%mod;
+        return z;
     }
-    float hell(int c){
-        double y;
-        return 1;
+    int main()
+    {
+        int x = calculate(4,50);
+        return 0;
     }
 }
